@@ -88,5 +88,5 @@ package-lock.json
 *.tga
 *.shader
 *.asset
-*.EditorUserSettings.asset
 !.ts
+*.asset
