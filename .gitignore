@@ -79,7 +79,6 @@ Logs/
 node_modules/
 ProjectSettings/
 Temp/
-UserSettings/
 package.json
 tsconfig.json
 package-lock.json
@@ -88,4 +87,6 @@ package-lock.json
 *.png
 *.tga
 *.shader
+*.asset
+*.EditorUserSettings.asset
 !.ts
