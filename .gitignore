@@ -69,3 +69,23 @@ crashlytics-build.properties
 
 # NODE
 node_modules/
+
+
+# 여기서 부터 추가
+Packages/
+Build/
+Library/
+Logs/
+node_modules/
+ProjectSettings/
+Temp/
+UserSettings/
+package.json
+tsconfig.json
+package-lock.json
+*.meta
+*.xml
+*.png
+*.tga
+*.shader
+!.ts
