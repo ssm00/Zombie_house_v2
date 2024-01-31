@@ -1,0 +1,36 @@
+fileFormatVersion: 2
+guid: a123000d79760c944a2f606b33c502d1
+importerOverride: ZEPETO.Script.Compiler:ZEPETO.Script:TypescriptAssetImporter
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: -1123457745, guid: 54cf806323ffe4418a4ce4cc63fe6b9d, type: 3}
+  isAssemblyDeclarations: 0
+  assembly: 
+  generateAllTypes: 1
+  types: []
+  generateWrapper: 0
+  overrideWrapperTypes: 0
+  wrapperTypes: []
+  WrapperFilters: []
+  wrapperOutputDirectory: Generated
+  compiledResult: '{"source":"\"use strict\";\r\nObject.defineProperty(exports, \"__esModule\",
+    { value: true });\r\nconst ZEPETO_Script_1 = require(\"ZEPETO.Script\");\r\nconst
+    UnityEngine_1 = require(\"UnityEngine\");\r\nconst UnityEngine_UI_1 = require(\"UnityEngine.UI\");\r\nclass
+    UserColorManager extends ZEPETO_Script_1.ZepetoScriptBehaviour {\r\n    static
+    getInstance() {\r\n        if (this.instance == null) {\r\n            this.instance
+    = UnityEngine_1.GameObject.FindObjectOfType($typeof(UserColorManager));\r\n       
+    }\r\n        return this.instance;\r\n    }\r\n    Start() {\r\n        const
+    p1 = this.transform.Find(\"p1\").gameObject;\r\n        const p2 = this.transform.Find(\"p2\").gameObject;\r\n       
+    const p3 = this.transform.Find(\"p3\").gameObject;\r\n        const p4 = this.transform.Find(\"p4\").gameObject;\r\n       
+    const p5 = this.transform.Find(\"p5\").gameObject;\r\n        this.playerUiList.push(p1,
+    p2, p3, p4, p5);\r\n    }\r\n    updateColor(zombieCount) {\r\n        for (let
+    i = 0; i < zombieCount; i++) {\r\n            this.playerUiList[i].GetComponent($typeof(UnityEngine_UI_1.Image)).sprite
+    = this.userRed;\r\n        }\r\n    }\r\n}\r\nexports.default = UserColorManager;\r\n//#
+    sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiVXNlckNvbG9yTWFuYWdlci5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbIlVzZXJDb2xvck1hbmFnZXIudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7QUFBQSxpREFBcUQ7QUFDckQsNkNBQTBEO0FBQzFELG1EQUFxQztBQUVyQyxNQUFxQixnQkFBaUIsU0FBUSxxQ0FBcUI7SUFPeEQsTUFBTSxDQUFDLFdBQVc7UUFDckIsSUFBSSxJQUFJLENBQUMsUUFBUSxJQUFJLElBQUksRUFBRTtZQUN2QixJQUFJLENBQUMsUUFBUSxHQUFHLHdCQUFVLENBQUMsZ0JBQWdCLFNBQUMsZ0JBQWdCLEVBQUcsQ0FBQztTQUNuRTtRQUNELE9BQU8sSUFBSSxDQUFDLFFBQVEsQ0FBQTtJQUN4QixDQUFDO0lBRUQsS0FBSztRQUNELE1BQU0sRUFBRSxHQUFHLElBQUksQ0FBQyxTQUFTLENBQUMsSUFBSSxDQUFDLElBQUksQ0FBQyxDQUFDLFVBQVUsQ0FBQztRQUNoRCxNQUFNLEVBQUUsR0FBRyxJQUFJLENBQUMsU0FBUyxDQUFDLElBQUksQ0FBQyxJQUFJLENBQUMsQ0FBQyxVQUFVLENBQUM7UUFDaEQsTUFBTSxFQUFFLEdBQUcsSUFBSSxDQUFDLFNBQVMsQ0FBQyxJQUFJLENBQUMsSUFBSSxDQUFDLENBQUMsVUFBVSxDQUFDO1FBQ2hELE1BQU0sRUFBRSxHQUFHLElBQUksQ0FBQyxTQUFTLENBQUMsSUFBSSxDQUFDLElBQUksQ0FBQyxDQUFDLFVBQVUsQ0FBQztRQUNoRCxNQUFNLEVBQUUsR0FBRyxJQUFJLENBQUMsU0FBUyxDQUFDLElBQUksQ0FBQyxJQUFJLENBQUMsQ0FBQyxVQUFVLENBQUM7UUFDaEQsSUFBSSxDQUFDLFlBQVksQ0FBQyxJQUFJLENBQUMsRUFBRSxFQUFDLEVBQUUsRUFBQyxFQUFFLEVBQUMsRUFBRSxFQUFDLEVBQUUsQ0FBQyxDQUFDO0lBQzNDLENBQUM7SUFFTSxXQUFXLENBQUMsV0FBa0I7UUFDakMsS0FBSyxJQUFJLENBQUMsR0FBRyxDQUFDLEVBQUUsQ0FBQyxHQUFHLFdBQVcsRUFBRSxDQUFDLEVBQUUsRUFBRTtZQUNsQyxJQUFJLENBQUMsWUFBWSxDQUFDLENBQUMsQ0FBQyxDQUFDLFlBQVksU0FBQyxzQkFBSyxHQUFJLE1BQU0sR0FBRyxJQUFJLENBQUMsT0FBTyxDQUFDO1NBQ3BFO0lBQ0wsQ0FBQztDQUVKO0FBN0JELG1DQTZCQyJ9","assetPath":"Assets/Ui/UserColorManager.ts","manifest":{"properties":[{"assembly":"UnityEngine.CoreModule","name":"playerUiList","type":"UnityEngine.GameObject[]","isArray":true,"initValue":[],"enumKeys":[],"enumValues":[],"attributes":[]},{"assembly":"UnityEngine.CoreModule","name":"userRed","type":"UnityEngine.Sprite","isArray":false,"initValue":[],"enumKeys":[],"enumValues":[],"attributes":[]}],"name":"UserColorManager","description":"","hasAnimatorMove":false},"isCompiled":true}'
+  typescriptHash: d9fcdbdc5b71e8f3bf3600a7b7e53380
+  onlyWriteTrigger: 0

@@ -1,0 +1,28 @@
+fileFormatVersion: 2
+guid: 483eec035ac916c42967b03cd87fe530
+importerOverride: ZEPETO.Script.Compiler:ZEPETO.Script:TypescriptAssetImporter
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: -1123457745, guid: 54cf806323ffe4418a4ce4cc63fe6b9d, type: 3}
+  isAssemblyDeclarations: 0
+  assembly: 
+  generateAllTypes: 1
+  types: []
+  generateWrapper: 0
+  overrideWrapperTypes: 0
+  wrapperTypes: []
+  WrapperFilters: []
+  wrapperOutputDirectory: Generated
+  compiledResult: '{"source":"\"use strict\";\r\nObject.defineProperty(exports, \"__esModule\",
+    { value: true });\r\nconst ZEPETO_Script_1 = require(\"ZEPETO.Script\");\r\nclass
+    CatchId extends ZEPETO_Script_1.ZepetoScriptBehaviour {\r\n    setSessionId(sessionId)
+    {\r\n        this.catchSessionId = sessionId;\r\n    }\r\n    getSessionId()
+    {\r\n        return this.catchSessionId;\r\n    }\r\n}\r\nexports.default = CatchId;\r\n//#
+    sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiQ2F0Y2hJZC5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbIkNhdGNoSWQudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7QUFBQSxpREFBcUQ7QUFFckQsTUFBcUIsT0FBUSxTQUFRLHFDQUFxQjtJQUkvQyxZQUFZLENBQUMsU0FBZ0I7UUFDaEMsSUFBSSxDQUFDLGNBQWMsR0FBRyxTQUFTLENBQUE7SUFDbkMsQ0FBQztJQUVNLFlBQVk7UUFDZixPQUFPLElBQUksQ0FBQyxjQUFjLENBQUM7SUFDL0IsQ0FBQztDQUVKO0FBWkQsMEJBWUMifQ==","assetPath":"Assets/CatchId.ts","manifest":{"properties":[{"assembly":"mscorlib","name":"catchSessionId","type":"System.String","isArray":false,"initValue":[],"enumKeys":[],"enumValues":[],"attributes":[]}],"name":"CatchId","description":"","hasAnimatorMove":false},"isCompiled":true}'
+  typescriptHash: 45425156dd25c364f72838c0ff5e9273
+  onlyWriteTrigger: 0

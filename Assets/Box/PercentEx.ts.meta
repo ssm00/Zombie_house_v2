@@ -1,0 +1,83 @@
+fileFormatVersion: 2
+guid: 1140b80596f71e542bd55f1fd603ab6c
+importerOverride: ZEPETO.Script.Compiler:ZEPETO.Script:TypescriptAssetImporter
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: -1123457745, guid: 54cf806323ffe4418a4ce4cc63fe6b9d, type: 3}
+  isAssemblyDeclarations: 0
+  assembly: 
+  generateAllTypes: 1
+  types: []
+  generateWrapper: 0
+  overrideWrapperTypes: 0
+  wrapperTypes: []
+  WrapperFilters: []
+  wrapperOutputDirectory: Generated
+  compiledResult: "{\"source\":\"\\\"use strict\\\";\\r\\nObject.defineProperty(exports,
+    \\\"__esModule\\\", { value: true });\\r\\nconst ZEPETO_Script_1 = require(\\\"ZEPETO.Script\\\");\\r\\nconst
+    UnityEngine_1 = require(\\\"UnityEngine\\\");\\r\\nconst UnityEngine_UI_1 = require(\\\"UnityEngine.UI\\\");\\r\\nconst
+    ZEPETO_Character_Controller_1 = require(\\\"ZEPETO.Character.Controller\\\");\\r\\nconst
+    Client_1 = require(\\\"../Client\\\");\\r\\nclass PercentEx extends ZEPETO_Script_1.ZepetoScriptBehaviour
+    {\\r\\n    constructor() {\\r\\n        super(...arguments);\\r\\n        this.buttonCheck
+    = false;\\r\\n        this._isIconActive = false;\\r\\n        this._isDoneFirstTrig
+    = false;\\r\\n        // \uBC31\uC2E0 \uC2DC\uAC04 \uCCB4\uD06C\\r\\n       
+    this.startTime = 0;\\r\\n        this.finishTime = 5;\\r\\n        this.TimeCheck
+    = false;\\r\\n    }\\r\\n    setBoxId(id) {\\r\\n        this.boxId = id;\\r\\n   
+    }\\r\\n    Start() {\\r\\n        this.client = UnityEngine_1.GameObject.FindObjectOfType($typeof(Client_1.default));\\r\\n       
+    this.animation = this.gameObject.GetComponentInParent($typeof(UnityEngine_1.Animation));\\r\\n       
+    this.CreateSlide();\\r\\n        this.CreateIcon();\\r\\n        this._canvas2.gameObject.SetActive(false);\\r\\n   
+    }\\r\\n    Update() {\\r\\n        if (this._isDoneFirstTrig && this._canvas1.gameObject.activeSelf)
+    {\\r\\n            this.UpdateIconRotation();\\r\\n        }\\r\\n        if
+    (this.TimeCheck) {\\r\\n            this.HideIcon();\\r\\n            this.startTime
+    += UnityEngine_1.Time.deltaTime;\\r\\n            this._canvas2.gameObject.SetActive(true);\\r\\n           
+    this.isTimePercent.value = this.startTime;\\r\\n            if (this.startTime
+    > this.finishTime) {\\r\\n                this.buttonCheck = true;\\r\\n               
+    this.HideSlide();\\r\\n                this.AnimationPlay();\\r\\n               
+    //\uC5EC\uAE30\uC5D0 \uBC31\uC2E0\uD604\uD669\\r\\n                this.client.openBox(this.boxId);\\r\\n               
+    this.gameObject.tag = \\\"OpenBox\\\";\\r\\n                //\uC5EC\uAE30\uC5D0
+    \uBC31\uC2E0\uD604\uD669\\r\\n                this.isTimePercent.value = 0;\\r\\n               
+    this.TimeCheck = false;\\r\\n            }\\r\\n        }\\r\\n    }\\r\\n   
+    //\uB0A8\uC774 \uBC15\uC2A4\uB97C \uC5F0 \uACBD\uC6B0 \uB3D9\uAE30\uD654\\r\\n   
+    forceOpen() {\\r\\n        this.HideIcon();\\r\\n        this.HideSlide();\\r\\n       
+    this.AnimationPlay();\\r\\n        this.isTimePercent.value = 0;\\r\\n       
+    this.TimeCheck = false;\\r\\n    }\\r\\n    OnTriggerEnter(coll) {\\r\\n       
+    if (coll.gameObject.tag == \\\"Me\\\" && this.buttonCheck == false) {\\r\\n           
+    if (coll != (ZEPETO_Character_Controller_1.ZepetoPlayers.instance.LocalPlayer?.zepetoPlayer?.character.GetComponent)($typeof(UnityEngine_1.Collider)))
+    {\\r\\n                return;\\r\\n            }\\r\\n            console.log(coll.gameObject.tag);\\r\\n           
+    this.ShowIcon();\\r\\n            this.OnTriggerEnterEvent?.Invoke();\\r\\n       
+    }\\r\\n    }\\r\\n    OnTriggerExit(coll) {\\r\\n        if (coll.gameObject.tag
+    == \\\"Me\\\" && this.buttonCheck == false) {\\r\\n            if (coll != (ZEPETO_Character_Controller_1.ZepetoPlayers.instance.LocalPlayer?.zepetoPlayer?.character.GetComponent)($typeof(UnityEngine_1.Collider)))
+    {\\r\\n                return;\\r\\n            }\\r\\n            this.isTimePercent.value
+    = 0;\\r\\n            this.TimeCheck = false;\\r\\n            this.startTime
+    = 0;\\r\\n            this.HideIcon();\\r\\n            this.HideSlide();\\r\\n           
+    this.OnTriggerExitEvent?.Invoke();\\r\\n        }\\r\\n    }\\r\\n    ShowIcon()
+    {\\r\\n        this._canvas1.gameObject.SetActive(true);\\r\\n        this._isIconActive
+    = true;\\r\\n    }\\r\\n    HideIcon() {\\r\\n        this._canvas1.gameObject.SetActive(false);\\r\\n       
+    this._isIconActive = false;\\r\\n    }\\r\\n    CreateIcon() {\\r\\n        if
+    (this._canvas1 === undefined) {\\r\\n            const canvas1 = UnityEngine_1.GameObject.Instantiate(this.prefIconCanvas,
+    this.iconPosition);\\r\\n            this._canvas1 = canvas1.GetComponent($typeof(UnityEngine_1.Canvas));\\r\\n           
+    this._button = canvas1.GetComponentInChildren($typeof(UnityEngine_UI_1.Button));\\r\\n           
+    this._canvas1.transform.position = this.iconPosition.position;\\r\\n        }\\r\\n       
+    this._cachedWorldCamera = UnityEngine_1.Object.FindObjectOfType($typeof(UnityEngine_1.Camera));\\r\\n       
+    this._canvas1.worldCamera = this._cachedWorldCamera;\\r\\n        this._canvas1.gameObject.SetActive(false);\\r\\n       
+    this._button.onClick.AddListener(() => {\\r\\n            this.OnClickIcon();\\r\\n       
+    });\\r\\n    }\\r\\n    CreateSlide() {\\r\\n        const canvas2 = UnityEngine_1.GameObject.Instantiate(this.percent,
+    this.iconPosition);\\r\\n        this._canvas2 = canvas2.GetComponent($typeof(UnityEngine_1.Canvas));\\r\\n       
+    this.isTimePercent = canvas2.GetComponentInChildren($typeof(UnityEngine_UI_1.Slider));\\r\\n       
+    this._canvas2.transform.position = this.iconPosition.position;\\r\\n        this._cachedWorldCamera
+    = UnityEngine_1.Object.FindObjectOfType($typeof(UnityEngine_1.Camera));\\r\\n       
+    this._canvas2.worldCamera = this._cachedWorldCamera;\\r\\n    }\\r\\n    HideSlide()
+    {\\r\\n        this._canvas2.gameObject.SetActive(false);\\r\\n        this._isIconActive
+    = false;\\r\\n    }\\r\\n    UpdateIconRotation() {\\r\\n        this._canvas1.transform.LookAt(this._cachedWorldCamera.transform);\\r\\n   
+    }\\r\\n    OnClickIcon() {\\r\\n        this.OnClickEvent?.Invoke();\\r\\n       
+    this.TimeCount();\\r\\n    }\\r\\n    AnimationPlay() {\\r\\n        this.animation.Play(\\\"Crate_Open\\\");\\r\\n   
+    }\\r\\n    TimeCount() {\\r\\n        this.TimeCheck = true;\\r\\n    }\\r\\n}\\r\\nexports.default
+    = PercentEx;\\r\\n//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiUGVyY2VudEV4LmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiUGVyY2VudEV4LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7O0FBQUEsaURBQXNEO0FBQ3RELDZDQUFxSDtBQUNySCxtREFBZ0Q7QUFFaEQsNkVBQTREO0FBRTVELHNDQUErQjtBQUUvQixNQUFxQixTQUFVLFNBQVEscUNBQXFCO0lBQTVEOztRQWVZLGdCQUFXLEdBQVUsS0FBSyxDQUFDO1FBTTNCLGtCQUFhLEdBQVksS0FBSyxDQUFDO1FBQy9CLHFCQUFnQixHQUFZLEtBQUssQ0FBQztRQUcxQyxXQUFXO1FBQ0gsY0FBUyxHQUFZLENBQUMsQ0FBQztRQUN2QixlQUFVLEdBQVksQ0FBQyxDQUFDO1FBQ3hCLGNBQVMsR0FBYSxLQUFLLENBQUM7SUFzSXhDLENBQUM7SUEvSFUsUUFBUSxDQUFDLEVBQVU7UUFDdEIsSUFBSSxDQUFDLEtBQUssR0FBRyxFQUFFLENBQUM7SUFDcEIsQ0FBQztJQUVPLEtBQUs7UUFDVCxJQUFJLENBQUMsTUFBTSxHQUFHLHdCQUFVLENBQUMsZ0JBQWdCLFNBQUMsZ0JBQU0sRUFBRyxDQUFDO1FBQ3BELElBQUksQ0FBQyxTQUFTLEdBQUMsSUFBSSxDQUFDLFVBQVUsQ0FBQyxvQkFBb0IsU0FBQyx1QkFBUyxFQUFHLENBQUM7UUFDakUsSUFBSSxDQUFDLFdBQVcsRUFBRSxDQUFDO1FBQ25CLElBQUksQ0FBQyxVQUFVLEVBQUUsQ0FBQztRQUNsQixJQUFJLENBQUMsUUFBUSxDQUFDLFVBQVUsQ0FBQyxTQUFTLENBQUMsS0FBSyxDQUFDLENBQUM7SUFDOUMsQ0FBQztJQUNPLE1BQU07UUFDVixJQUFJLElBQUksQ0FBQyxnQkFBZ0IsSUFBSSxJQUFJLENBQUMsUUFBUSxDQUFDLFVBQVUsQ0FBQyxVQUFVLEVBQUU7WUFDOUQsSUFBSSxDQUFDLGtCQUFrQixFQUFFLENBQUM7U0FDN0I7UUFDRCxJQUFHLElBQUksQ0FBQyxTQUFTLEVBQUU7WUFDZixJQUFJLENBQUMs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\",\"assetPath\":\"Assets/Box/PercentEx.ts\",\"manifest\":{\"properties\":[{\"assembly\":\"UnityEngine.CoreModule\",\"name\":\"prefIconCanvas\",\"type\":\"UnityEngine.GameObject\",\"isArray\":false,\"initValue\":[],\"enumKeys\":[],\"enumValues\":[],\"attributes\":[{\"name\":\"Header\",\"args\":[\"\\\"[Icon]\\\"\"]},{\"name\":\"SerializeField\",\"args\":[]}]},{\"assembly\":\"UnityEngine.CoreModule\",\"name\":\"percent\",\"type\":\"UnityEngine.GameObject\",\"isArray\":false,\"initValue\":[],\"enumKeys\":[],\"enumValues\":[],\"attributes\":[{\"name\":\"SerializeField\",\"args\":[]}]},{\"assembly\":\"UnityEngine.CoreModule\",\"name\":\"iconPosition\",\"type\":\"UnityEngine.Transform\",\"isArray\":false,\"initValue\":[],\"enumKeys\":[],\"enumValues\":[],\"attributes\":[{\"name\":\"SerializeField\",\"args\":[]}]},{\"assembly\":\"mscorlib\",\"name\":\"boxId\",\"type\":\"System.Single\",\"isArray\":false,\"initValue\":[],\"enumKeys\":[],\"enumValues\":[],\"attributes\":[]},{\"assembly\":\"UnityEngine.CoreModule\",\"name\":\"OnClickEvent\",\"type\":\"UnityEngine.Events.UnityEvent\",\"isArray\":false,\"initValue\":[],\"enumKeys\":[],\"enumValues\":[],\"attributes\":[{\"name\":\"Header\",\"args\":[\"\\\"[Unity
+    Event]\\\"\"]}]},{\"assembly\":\"UnityEngine.CoreModule\",\"name\":\"OnTriggerEnterEvent\",\"type\":\"UnityEngine.Events.UnityEvent\",\"isArray\":false,\"initValue\":[],\"enumKeys\":[],\"enumValues\":[],\"attributes\":[]},{\"assembly\":\"UnityEngine.CoreModule\",\"name\":\"OnTriggerExitEvent\",\"type\":\"UnityEngine.Events.UnityEvent\",\"isArray\":false,\"initValue\":[],\"enumKeys\":[],\"enumValues\":[],\"attributes\":[]}],\"name\":\"PercentEx\",\"description\":\"\",\"hasAnimatorMove\":false},\"isCompiled\":true}"
+  typescriptHash: 55aa60a6de63fb72cdb1d6e2a7709b24
+  onlyWriteTrigger: 0

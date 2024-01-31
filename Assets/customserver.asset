@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 41769139, guid: 736b963f5c0b1409797512234358a345, type: 3}
+  m_Name: customserver
+  m_EditorClassIdentifier: 
+  zepetoApiHost: https://gw-napi.zepeto.io
+  multiplayHost: 192.168.0.24
+  multiplayPort: 58423
+  isSecure: 0
+  gameSystemHost: api.gamesystem.zepeto.run
+  zepetoStudioHost: https://api-studio.zepeto.me
+  worldCreatorHost: https://api-world-creator.zepeto.me
+  frontGatewayProxyApiHost: https://content-fgw.zepeto.io
+  neloHost: rLsisxJSwkR3QXo+tXOeThZQQ6ZLgBxp7Zm8VqlbmZ8D5wsFqYmczf8CEB0QcQX3+qCHFan9/ESwwTyea75RweQk7/Brq+fyJ6e54fMLrd8iZ2MMjGh2znO39/G3rwcA
+  iwpHost: https://iwp.world.zepeto.run
+  matchmakeHost: 
+  worldServiceHost: https://world-service-api.world.zepeto.run
+  worldWebHost: https://content-fgw.zepeto.io/wapi
+  zepetoCDNHost: https://static-zepeto.pstatic.net
+  zepetoAssetHost: https://cf-wk1-zepetoful.zepeto.io
+  zepetoWebHost: https://zepeto.me
+  isLocal: 1
+  playbaasApiHost: https://api.playbaas.xyz

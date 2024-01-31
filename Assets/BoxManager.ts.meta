@@ -1,0 +1,43 @@
+fileFormatVersion: 2
+guid: 17213188c85b69b47ba593029ab93646
+importerOverride: ZEPETO.Script.Compiler:ZEPETO.Script:TypescriptAssetImporter
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: -1123457745, guid: 54cf806323ffe4418a4ce4cc63fe6b9d, type: 3}
+  isAssemblyDeclarations: 0
+  assembly: 
+  generateAllTypes: 1
+  types: []
+  generateWrapper: 0
+  overrideWrapperTypes: 0
+  wrapperTypes: []
+  WrapperFilters: []
+  wrapperOutputDirectory: Generated
+  compiledResult: '{"source":"\"use strict\";\r\nObject.defineProperty(exports, \"__esModule\",
+    { value: true });\r\nconst ZEPETO_Script_1 = require(\"ZEPETO.Script\");\r\nconst
+    UnityEngine_1 = require(\"UnityEngine\");\r\nconst PercentEx_1 = require(\"./Box/PercentEx\");\r\nclass
+    BoxManager extends ZEPETO_Script_1.ZepetoScriptBehaviour {\r\n    constructor()
+    {\r\n        super(...arguments);\r\n        this.boxList = [];\r\n    }\r\n   
+    static getInstance() {\r\n        if (this.instance == null) {\r\n           
+    this.instance = UnityEngine_1.GameObject.FindObjectOfType($typeof(BoxManager));\r\n       
+    }\r\n        return this.instance;\r\n    }\r\n    makingBox(boxPositionList)
+    {\r\n        let boxId = 0;\r\n        for (let boxInfo of boxPositionList) {\r\n           
+    const boxPrefab = UnityEngine_1.Object.Instantiate(this.box);\r\n           
+    const percentEx = boxPrefab.gameObject.GetComponentInChildren($typeof(PercentEx_1.default));\r\n           
+    percentEx.setBoxId(boxId++);\r\n            boxPrefab.gameObject.tag = \"ClosedBox\";\r\n           
+    boxPrefab.transform.position = new UnityEngine_1.Vector3(boxInfo.position.x,
+    boxInfo.position.y, boxInfo.position.z);\r\n            boxPrefab.transform.rotation
+    = UnityEngine_1.Quaternion.Euler(new UnityEngine_1.Vector3(boxInfo.rotation.x,
+    boxInfo.rotation.y, boxInfo.rotation.z));\r\n            this.boxList.push(boxPrefab);\r\n       
+    }\r\n    }\r\n    otherOpenBox(boxId) {\r\n        const otherOpenBox = this.boxList[boxId];\r\n       
+    if (otherOpenBox.gameObject.tag == \"ClosedBox\") {\r\n            const boxScript
+    = otherOpenBox.gameObject.GetComponentInChildren($typeof(PercentEx_1.default));\r\n           
+    boxScript.forceOpen();\r\n            otherOpenBox.gameObject.tag = \"OpenBox\";\r\n       
+    }\r\n    }\r\n}\r\nexports.default = BoxManager;\r\n//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiQm94TWFuYWdlci5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbIkJveE1hbmFnZXIudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7QUFBQSxpREFBcUQ7QUFDckQsNkNBQW9FO0FBRXBFLCtDQUF3QztBQUV4QyxNQUFxQixVQUFXLFNBQVEscUNBQXFCO0lBQTdEOztRQUdZLFlBQU8sR0FBaUIsRUFBRSxDQUFDO0lBZ0N2QyxDQUFDO0lBNUJVLE1BQU0sQ0FBQyxXQUFXO1FBQ3JCLElBQUksSUFBSSxDQUFDLFFBQVEsSUFBSSxJQUFJLEVBQUU7WUFDdkIsSUFBSSxDQUFDLFFBQVEsR0FBRyx3QkFBVSxDQUFDLGdCQUFnQixTQUFDLFVBQVUsRUFBRyxDQUFDO1NBQzdEO1FBQ0QsT0FBTyxJQUFJLENBQUMsUUFBUSxDQUFBO0lBQ3hCLENBQUM7SUFFTSxTQUFTLENBQUMsZUFBNEI7UUFDekMsSUFBSSxLQUFLLEdBQUcsQ0FBQyxDQUFDO1FBQ2QsS0FBSyxJQUFJLE9BQU8sSUFBSSxlQUFlLEVBQUM7WUFDaEMsTUFBTSxTQUFTLEdBQUcsb0JBQU0sQ0FBQyxXQUFXLENBQUMsSUFBSSxDQUFDLEdBQUcsQ0FBZSxDQUFDO1lBQzdELE1BQU0sU0FBUyxHQUFHLFNBQVMsQ0FBQyxVQUFVLENBQUMsc0JBQXNCLFNBQUMsbUJBQVMsRUFBRyxDQUFDO1lBQzNFLFNBQVMsQ0FBQyxRQUFRLENBQUMsS0FBSyxFQUFFLENBQUMsQ0FBQztZQUM1QixTQUFTLENBQUMsVUFBVSxDQUFDLEdBQUcsR0FBRyxXQUFXLENBQUE7WUFDdEMsU0FBUyxDQUFDLFNBQVMsQ0FBQyxRQUFRLEdBQUcsSUFBSSxxQkFBTyxDQUFDLE9BQU8sQ0FBQyxRQUFRLENBQUMsQ0FBQyxFQUFFLE9BQU8sQ0FBQyxRQUFRLENBQUMsQ0FBQyxFQUFFLE9BQU8sQ0FBQyxRQUFRLENBQUMsQ0FBQyxDQUFDLENBQUM7WUFDdkcsU0FBUyxDQUFDLFNBQVMsQ0FBQyxRQUFRLEdBQUcsd0JBQVUsQ0FBQyxLQUFLLENBQUMsSUFBSSxxQkFBTyxDQUFDLE9BQU8sQ0FBQyxRQUFRLENBQUMsQ0FBQyxFQUFFLE9BQU8sQ0FBQyxRQUFRLENBQUMsQ0FBQyxFQUFFLE9BQU8sQ0FBQyxRQUFRLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FBQztZQUN6SCxJQUFJLENBQUMsT0FBTyxDQUFDLElBQUksQ0FBQyxTQUFTLENBQUMsQ0FBQTtTQUMvQjtJQUNMLENBQUM7SUFFTSxZQUFZLENBQUMsS0FBWTtRQUM1QixNQUFNLFlBQVksR0FBRyxJQUFJLENBQUMsT0FBTyxDQUFDLEtBQUssQ0FBQyxDQUFDO1FBQ3pDLElBQUksWUFBWSxDQUFDLFVBQVUsQ0FBQyxHQUFHLElBQUksV0FBVyxFQUFFO1lBQzVDLE1BQU0sU0FBUyxHQUFHLFlBQVksQ0FBQyxVQUFVLENBQUMsc0JBQXNCLFNBQUMsbUJBQVMsRUFBRyxDQUFDO1lBQzlFLFNBQVMsQ0FBQyxTQUFTLEVBQUUsQ0FBQztZQUN0QixZQUFZLENBQUMsVUFBVSxDQUFDLEdBQUcsR0FBRyxTQUFTLENBQUE7U0FDMUM7SUFDTCxDQUFDO0NBQ0o7QUFuQ0QsNkJBbUNDIn0=","assetPath":"Assets/BoxManager.ts","manifest":{"properties":[{"assembly":"UnityEngine.CoreModule","name":"box","type":"UnityEngine.GameObject","isArray":false,"initValue":[],"enumKeys":[],"enumValues":[],"attributes":[]}],"name":"BoxManager","description":"","hasAnimatorMove":false},"isCompiled":true}'
+  typescriptHash: 865288bc3e59f00b66f50ce5194b2726
+  onlyWriteTrigger: 0
