@@ -90,3 +90,4 @@ package-lock.json
 *.asset
 !.ts
 *.asset
+Assets/flyzeroserver.multiplay/index.d.ts
