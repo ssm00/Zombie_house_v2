@@ -17,14 +17,16 @@ import {
     Object,
     Quaternion, SkinnedMeshRenderer,
     Time,
-    WaitForSeconds
+    WaitForSeconds,
 } from "UnityEngine";
 import {TextMeshProUGUI} from "TMPro";
 import BoxManager from "./BoxManager";
+
 import {Button} from "UnityEngine.UI";
 import CatchId from "./CatchId";
 import UserColorManager from "./Ui/UserColorManager";
 import BoxColorManager from "./Ui/BoxColorManager";
+import Closet from './Closet/Closet';
 
 export default class Client extends ZepetoScriptBehaviour {
 
@@ -49,6 +51,8 @@ export default class Client extends ZepetoScriptBehaviour {
     private userColorManager: UserColorManager;
     private boxColorManager: BoxColorManager;
 
+    private closet: Closet;
+
     private speedValue: number=0;
     private startTimer : TextMeshProUGUI;
     private room: Room;
@@ -62,6 +66,7 @@ export default class Client extends ZepetoScriptBehaviour {
     Start() {
         this.startTimer = GameObject.Find("Canvas").GetComponentInChildren<TextMeshProUGUI>();
         this.boxManager = BoxManager.getInstance();
+        this.closet = Closet.getInstance();
         this.userColorManager = UserColorManager.getInstance();
         this.boxColorManager = BoxColorManager.getInstance();
         this.againButton.gameObject.SetActive(false);
@@ -311,6 +316,31 @@ export default class Client extends ZepetoScriptBehaviour {
         this.room.Send("boxOpen",boxId)
     }
     
+    //옷장에서 나올 장소
+    public  moveOutPosition() {
+        if(this.closet.DistanceCheck(this.myPlayer.character.transform.position,this.closet.ClosetHidePosition)>0.1) {
+            console.log("out");
+            this.myPlayer.character.gameObject.transform.position=this.closet.ClosetOutPosition;
+            this.closet.HidePeopleNum=0;
+        }
+    }
+
+    //옷장으로 들어가기
+    public moveIntoCloset() {
+        //사람+옷장 비어있을 때
+        if(this.closet.HidePeopleNum==0 && this.myPlayer.character.gameObject.tag=="Me") {
+            const myPlayer = ZepetoPlayers.instance.LocalPlayer.zepetoPlayer;
+            this.myPlayer=myPlayer;
+            console.log("클릭 시 플레이어 위치 x "+this.myPlayer.character.transform.position.x+"y "+this.myPlayer.character.transform.position.y+"z "+this.myPlayer.character.transform.position.z);
+            console.log("옷장 안에 숨을 위치 x "+this.closet.ClosetHidePosition.x+"y "+this.closet.ClosetHidePosition.y+"z "+this.closet.ClosetHidePosition.z);
+            this.closet.ClosetOutPosition=this.myPlayer.character.transform.position;
+            this.myPlayer.character.gameObject.transform.position=this.closet.ClosetHidePosition;
+            console.log("옷장에서 나올 위치 x "+this.closet.ClosetOutPosition.x+"y "+this.closet.ClosetOutPosition.y+"z "+this.closet.ClosetOutPosition.z);
+            this.closet.HidePeopleNum+=1;
+        }
+        
+        
+    } 
     
     //나 숙이기 T:M(M)
     private doCrouch() {
@@ -453,6 +483,11 @@ export default class Client extends ZepetoScriptBehaviour {
         const projRot = UnityEngine.Vector3.ProjectOnPlane(lookAxisRot.eulerAngles, UnityEngine.Vector3.right);
         // Match the rotation of the character with the forward direction of the camera.
         this.myPlayer.character.gameObject.transform.rotation = Quaternion.Euler(projRot);
+       // console.log(this.closet.DistanceCheck(this.myPlayer.character.gameObject.transform.position,this.closet.ClosetHidePosition));
+        //this.moveOutPosition();
+        if(this.closet.HidePeopleNum==1) {
+            this.moveOutPosition();
+        }
     }
 
     private doExit() {
