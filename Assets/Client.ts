@@ -64,8 +64,6 @@ export default class Client extends ZepetoScriptBehaviour {
     //game
     private closet: Closet;
 
-    private speedValue: number=0;
-    private startTimer : TextMeshProUGUI;
     private room: Room;
     private myPlayer: ZepetoPlayer;
     private myCamera: ZepetoCamera;
