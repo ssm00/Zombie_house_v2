@@ -6,11 +6,11 @@ import {
     CharacterState,
     SpawnInfo,
     ZepetoPlayers,
-    ZepetoPlayer, ZepetoCamera, ZepetoScreenTouchpad,
+    ZepetoPlayer, ZepetoCamera, ZepetoScreenTouchpad, ZepetoCharacter,
 } from "ZEPETO.Character.Controller";
 import * as UnityEngine from "UnityEngine";
 import {
-    Animator, AudioClip, AudioSource,
+    Animator, AudioClip, AudioListener, AudioSource,
     CapsuleCollider,
     GameObject,
     HumanBodyBones, Material,
@@ -25,6 +25,8 @@ import {Button} from "UnityEngine.UI";
 import CatchId from "./CatchId";
 import UserColorManager from "./Ui/UserColorManager";
 import BoxColorManager from "./Ui/BoxColorManager";
+import WalkSoundManager from "./walkSound/WalkSoundManager";
+import WalkSoundPlay from './walkSound/WalkSoundPlay';
 
 export default class Client extends ZepetoScriptBehaviour {
 
@@ -37,31 +39,46 @@ export default class Client extends ZepetoScriptBehaviour {
     public winUi: TextMeshProUGUI;
     public againButton: Button;
     public exitButton: Button;
+    private userColorManager: UserColorManager;
+    private boxColorManager: BoxColorManager;
+    private startTimer : TextMeshProUGUI;
 
-    public catchZone: GameObject;
+    //movement
+    private speedValue: number=0;
     public isCrouch:bool;
+
+    //attachment
     public zombieRing: GameObject;
     public zombieColor: Material;
     public bodyBone:HumanBodyBones;
     public attackSound: AudioClip;
+    public catchZone: GameObject;
+    private zombieHand: CapsuleCollider;
 
+    //box
     private boxManager: BoxManager;
-    private userColorManager: UserColorManager;
-    private boxColorManager: BoxColorManager;
+    private walkSoundManager: WalkSoundManager;
 
-    private speedValue: number=0;
-    private startTimer : TextMeshProUGUI;
+    //game
     private room: Room;
     private myPlayer: ZepetoPlayer;
     private myCamera: ZepetoCamera;
     private myPlayerAnimator : Animator
     private zepetoScreenPad: ZepetoScreenTouchpad;
-    private zombieHand: CapsuleCollider;
     private currentPlayers: Map<string, Player> = new Map<string, Player>();
+
+    private static instance;
+    public static getInstance() {
+        if (this.instance == null) {
+            this.instance = GameObject.FindObjectOfType<Client>();
+        }
+        return this.instance
+    }
 
     Start() {
         this.startTimer = GameObject.Find("Canvas").GetComponentInChildren<TextMeshProUGUI>();
         this.boxManager = BoxManager.getInstance();
+        this.walkSoundManager = WalkSoundManager.getInstance();
         this.userColorManager = UserColorManager.getInstance();
         this.boxColorManager = BoxColorManager.getInstance();
         this.againButton.gameObject.SetActive(false);
@@ -82,7 +99,6 @@ export default class Client extends ZepetoScriptBehaviour {
         this.exitButton.onClick.AddListener(() => {
             this.doExit();
         });
-
         this.multiPlay.RoomJoined += (room: Room) => {
             //서버의 state가 변경되면 호출
             room.OnStateChange += this.OnStateChange;
@@ -146,7 +162,6 @@ export default class Client extends ZepetoScriptBehaviour {
                 }
             }
         }
-
     }
 
     //룸 state 변경시 감지 , T: 받기
@@ -169,6 +184,13 @@ export default class Client extends ZepetoScriptBehaviour {
                 myPlayer.character.OnChangedState.AddListener((cur) => {
                     this.SendState(cur);
                 });
+                //내 캐릭터 발소리 추가
+                const rightFoot: UnityEngine.Transform = this.myPlayerAnimator.GetBoneTransform(this.walkSoundManager.getAttachTargetPosition());
+                const walkSoundPrefab = Object.Instantiate(this.walkSoundManager.getWalkSoundPrefab(), rightFoot) as GameObject;
+                const walkSoundPlay = walkSoundPrefab.GetComponent<WalkSoundPlay>();
+                this.walkSoundManager.setMyWalkSound(walkSoundPlay);
+                //오디오리스너추가
+                this.myPlayer.character.gameObject.AddComponent<AudioListener>();
             });
             //다른 플레이어의 position 입력받기위해 나말고 존재하는 다른 사람의 오브젝트에 listener 추가
             ZepetoPlayers.instance.OnAddedPlayer.AddListener((sessionId:string) => {
@@ -177,8 +199,9 @@ export default class Client extends ZepetoScriptBehaviour {
                 //다른플레이어면
                 if (!isLocal) {
                     const player: Player = this.currentPlayers.get(sessionId);
-                    this.addCatchSessionId(sessionId);
                     player.OnChange += (ChangeValues) => this.OnUpdatePlayer(sessionId, player)
+                    this.addCatchSessionId(sessionId);
+                    this.addOtherWalkSound(sessionId);
                 }
             });
         }
@@ -204,7 +227,7 @@ export default class Client extends ZepetoScriptBehaviour {
         //나간사람 캐릭터 지우기
         leave.forEach((player: Player, sessionId: string) => this.OnLeavePlayer(sessionId, player))
     }
-    
+
     //잡은 사람 sessionId를 알아야 상태 변경 가능 -> sessionId를 제페토 플레이어에 스크립트로 등록하기
     private addCatchSessionId(sessionId:string) {
         const zepetoPlayer = ZepetoPlayers.instance.GetPlayer(sessionId);
@@ -213,11 +236,29 @@ export default class Client extends ZepetoScriptBehaviour {
         catchId.setSessionId(sessionId);
     }
 
+    //나 말고 다른사람 걷는 소리 추가
+    private addOtherWalkSound(sessionId: string) {
+        const otherPlayer = ZepetoPlayers.instance.GetPlayer(sessionId);
+        const otherAnimator = otherPlayer.character.GetComponentInChildren<Animator>();
+        const rightFoot: UnityEngine.Transform = otherAnimator.GetBoneTransform(this.walkSoundManager.getAttachTargetPosition());
+        const walkSoundPrefab = Object.Instantiate(this.walkSoundManager.getWalkSoundPrefab(), rightFoot) as GameObject;
+        const walkSoundPlay = walkSoundPrefab.GetComponent<WalkSoundPlay>();
+        /**
+         * walkSoundManger 에서 모든 플레이어 걷기 소리 관리
+         * 개별 컴포넌트로 해결 불가능 -> crouch시 소리 판단 때문에 server의 state값(isCroch)에 연동 되어야함
+         * 또한 개별 컴포넌트 작성 시 update 위치값 비교로 판단 되는데 컴퓨터 성능에 따라 달라질 수 있음.
+         * state의 charater 상태와 isCrouch로 판단하는 것이 확실한 방법
+         * 대신 walkSoundManager를 만들어 state의 isCrouch 값 변경시 호출로 연동 구현
+         */
+        this.walkSoundManager.otherWalkSoundList.set(sessionId, walkSoundPlay);
+    }
+
     //내시점 나머지 플레이어 변경 스키마 변경되었을때 T:M(O)
     private OnUpdatePlayer(sessionId: string, player: Player) {
         const zepetoPlayer = ZepetoPlayers.instance.GetPlayer(sessionId);
         console.log(`나머지 변경 ${sessionId} , ${player.role}`)
         this.updateOtherMovement(player, zepetoPlayer);
+        this.updateOtherSound(sessionId, player);
         //좀비감염시
         if (player.role == "Zombie") {
             const animator: Animator = zepetoPlayer.character.GetComponentInChildren<Animator>();
@@ -248,15 +289,16 @@ export default class Client extends ZepetoScriptBehaviour {
         }
         othersAnimator.SetBool("isCrouch", player.isCrouch);
         if (player.isCrouch) {
-            zepetoPlayer.character.additionalRunSpeed = -this.speedValue;
-            zepetoPlayer.character.characterController.height = 0.6;
-            zepetoPlayer.character.characterController.center = new UnityEngine.Vector3(0, 0.3, 0);
+            zepetoPlayer.character.characterController.height = 0.5;
+            zepetoPlayer.character.characterController.center = new UnityEngine.Vector3(0, 0.2, 0);
         } else {
-            zepetoPlayer.character.additionalRunSpeed = this.speedValue;
             zepetoPlayer.character.characterController.height = 1.2;
             zepetoPlayer.character.characterController.center = new UnityEngine.Vector3(0, 0.6, 0);
         }
+    }
 
+    private updateOtherSound(sessionId: string, player: Player) {
+        this.walkSoundManager.playWalkingSound(player)
     }
 
     private othersAttackMotion(sessionId:string) {
@@ -296,9 +338,10 @@ export default class Client extends ZepetoScriptBehaviour {
                 bodyRenderer.material = this.zombieColor;
                 //속도
                 this.speedValue = 0.2;
-                this.myPlayer.character.additionalRunSpeed += 0.2;
+                this.myPlayer.character.additionalRunSpeed += this.speedValue;
             }
         }
+        this.walkSoundManager.playMyWalkingSound(mySchema.state, this.isCrouch);
     }
 
     //내시점 박스 위치 설정 T:M(M)
@@ -310,8 +353,8 @@ export default class Client extends ZepetoScriptBehaviour {
     public openBox(boxId:number) {
         this.room.Send("boxOpen",boxId)
     }
-    
-    
+
+
     //나 숙이기 T:M(M)
     private doCrouch() {
         this.isCrouch = !this.isCrouch;
@@ -334,7 +377,7 @@ export default class Client extends ZepetoScriptBehaviour {
             this.StartCoroutine(this.AttackCoRoutine());
         }
     }
-    
+
     //손 col 키기는 코루틴 모션 속도랑 맞춰서 켜야함
     *AttackCoRoutine() {
         this.zombieHand.enabled = true;
@@ -342,7 +385,7 @@ export default class Client extends ZepetoScriptBehaviour {
         yield new WaitForSeconds(0.8);
         this.zombieHand.enabled = false;
     }
-    
+
     //모션은 동기로 실행
     private attackMotion() {
         this.myPlayerAnimator.SetTrigger("Attack");
@@ -390,7 +433,7 @@ export default class Client extends ZepetoScriptBehaviour {
     }
 
     private OnJoinPlayer(sessionId: string, player: Player) {
-        console.log(`onjoins ${sessionId}`)
+        console.log(`${sessionId} , ONJOINPLAYER`)
         this.currentPlayers.set(sessionId, player)
 
         const spawnInfo = new SpawnInfo();
