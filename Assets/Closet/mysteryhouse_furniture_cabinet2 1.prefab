@@ -534,7 +534,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3997928070437818950}
   - component: {fileID: 3997928070437818951}
-  - component: {fileID: 3997928070437818944}
+  - component: {fileID: 4381461902506918471}
   m_Layer: 6
   m_Name: DockPoint
   m_TagString: Untagged
@@ -575,7 +575,7 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1.6, y: 3, z: 1.8}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &3997928070437818944
+--- !u!114 &4381461902506918471
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -590,29 +590,35 @@ MonoBehaviour:
   applyRootMotion: 0
   script:
     keys:
-    - OnTriggerExitEvent
-    - OnTriggerEnterEvent
-    - OnClickEvent
-    - iconPosition
     - prefIconCanvas
+    - iconPosition
+    - OnClickEvent
+    - OnTriggerEnterEvent
+    - OnTriggerExitEvent
+    - ClosetOutPosition
     - ClosetHidePosition
+    - HidePeopleNum
     unityValues:
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
+    - {fileID: 5492554559315844802, guid: 3ae92f20b71fdaf449e6283e526097fb, type: 3}
     - {fileID: 3997928069461266776}
-    - {fileID: 5492554559315844802, guid: 731df8b9c7d3b9c4f98cd1488885ebc5, type: 3}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
     - {fileID: 0}
     values:
-    - '{"type":"UnityEngine.Events.UnityEvent, UnityEngine.CoreModule","value":"{\"m_PersistentCalls\":{\"m_Calls\":[]}}"}'
-    - '{"type":"UnityEngine.Events.UnityEvent, UnityEngine.CoreModule","value":"{\"m_PersistentCalls\":{\"m_Calls\":[]}}"}'
-    - '{"type":"UnityEngine.Events.UnityEvent, UnityEngine.CoreModule","value":"{\"m_PersistentCalls\":{\"m_Calls\":[]}}"}'
     - 
     - 
+    - '{"type":"UnityEngine.Events.UnityEvent, UnityEngine.CoreModule","value":"{\"m_PersistentCalls\":{\"m_Calls\":[]}}"}'
+    - '{"type":"UnityEngine.Events.UnityEvent, UnityEngine.CoreModule","value":"{\"m_PersistentCalls\":{\"m_Calls\":[]}}"}'
+    - '{"type":"UnityEngine.Events.UnityEvent, UnityEngine.CoreModule","value":"{\"m_PersistentCalls\":{\"m_Calls\":[]}}"}'
     - '{"type":"UnityEngine.Vector3, UnityEngine.CoreModule","value":"{\"x\":0.0,\"y\":0.0,\"z\":0.0}"}'
+    - '{"type":"UnityEngine.Vector3, UnityEngine.CoreModule","value":"{\"x\":0.0,\"y\":0.0,\"z\":0.0}"}'
+    - '{"type":"System.Single, mscorlib","value":"0"}'
     unityArrayValues: []
     arrayValues: []
-    script: {fileID: 4458252877524076426, guid: 73ab9480dcc8a7548a91b1ee1c701286, type: 3}
+    script: {fileID: 4458252877524076426, guid: 804ebe908849be44ab76415fc26cdd36, type: 3}
     isExpaned: 0
 --- !u!1 &5324380713395922507
 GameObject:
