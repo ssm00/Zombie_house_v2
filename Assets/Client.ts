@@ -371,19 +371,16 @@ export default class Client extends ZepetoScriptBehaviour {
     //옷장으로 들어가기
     public moveIntoCloset() {
         //사람+옷장 비어있을 때
-        if(this.closet.HidePeopleNum==0 && this.myPlayer.character.gameObject.tag=="Me") {
-            const myPlayer = ZepetoPlayers.instance.LocalPlayer.zepetoPlayer;
-            this.myPlayer=myPlayer;
+        if(this.myPlayer.character.gameObject.tag=="Me") {
             console.log("클릭 시 플레이어 위치 x "+this.myPlayer.character.transform.position.x+"y "+this.myPlayer.character.transform.position.y+"z "+this.myPlayer.character.transform.position.z);
             console.log("옷장 안에 숨을 위치 x "+this.closet.ClosetHidePosition.x+"y "+this.closet.ClosetHidePosition.y+"z "+this.closet.ClosetHidePosition.z);
             this.closet.ClosetOutPosition=this.myPlayer.character.transform.position;
             this.myPlayer.character.gameObject.transform.position=this.closet.ClosetHidePosition;
+            console.log("누른후 x "+this.myPlayer.character.transform.position.x+"y "+this.myPlayer.character.transform.position.y+"z "+this.myPlayer.character.transform.position.z);
             console.log("옷장에서 나올 위치 x "+this.closet.ClosetOutPosition.x+"y "+this.closet.ClosetOutPosition.y+"z "+this.closet.ClosetOutPosition.z);
             this.closet.HidePeopleNum+=1;
         }
-        
-        
-    } 
+    }
 
     //나 숙이기 T:M(M)
     private doCrouch() {
@@ -526,11 +523,8 @@ export default class Client extends ZepetoScriptBehaviour {
         const projRot = UnityEngine.Vector3.ProjectOnPlane(lookAxisRot.eulerAngles, UnityEngine.Vector3.right);
         // Match the rotation of the character with the forward direction of the camera.
         this.myPlayer.character.gameObject.transform.rotation = Quaternion.Euler(projRot);
-       // console.log(this.closet.DistanceCheck(this.myPlayer.character.gameObject.transform.position,this.closet.ClosetHidePosition));
-        //this.moveOutPosition();
-        if(this.closet.HidePeopleNum==1) {
-            this.moveOutPosition();
-        }
+        console.log(this.myPlayer.character.gameObject.transform.position);
+        //
     }
 
     private doExit() {
