@@ -1,5 +1,17 @@
 import { ZepetoScriptBehaviour } from 'ZEPETO.Script';
-import { Camera, Canvas, Collider, GameObject, Transform, Object, AnimationClip, Animation, Time, Vector3} from 'UnityEngine';
+import {
+    Camera,
+    Canvas,
+    Collider,
+    GameObject,
+    Transform,
+    Object,
+    AnimationClip,
+    Animation,
+    Time,
+    Vector3,
+    CharacterController
+} from 'UnityEngine';
 import { Button, Text } from 'UnityEngine.UI';
 import { UnityEvent } from 'UnityEngine.Events';
 import { ZepetoCharacter, ZepetoPlayers } from 'ZEPETO.Character.Controller';
@@ -33,6 +45,8 @@ export default class Closet extends ZepetoScriptBehaviour {
     public ClosetOutPosition: Vector3; 
     public ClosetHidePosition: Vector3; 
     public HidePeopleNum: number;
+    private myPlayer: GameObject;
+    private myPlayerController: CharacterController;
     
     private static instance;
     public static getInstance() {
@@ -57,12 +71,15 @@ export default class Closet extends ZepetoScriptBehaviour {
         if (this._isDoneFirstTrig && this._canvas?.gameObject.activeSelf) {
             this.UpdateIconRotation();
         }
-    
     }
     
     private OnTriggerEnter(coll: Collider) {
-        if (coll != ZepetoPlayers.instance.LocalPlayer?.zepetoPlayer?.character.GetComponent<Collider>()) {
+        if (coll != ZepetoPlayers.instance.LocalPlayer?.zepetoPlayer?.character.GetComponent<Collider>() || coll.gameObject.tag != "Me") {
             return;
+        }
+        if (!this.myPlayer) {
+            this.myPlayer = coll.gameObject;
+            this.myPlayerController = coll.gameObject.GetComponent<CharacterController>();
         }
         this.ShowIcon();
         this.OnTriggerEnterEvent?.Invoke();
@@ -72,7 +89,6 @@ export default class Closet extends ZepetoScriptBehaviour {
         if (coll != ZepetoPlayers.instance.LocalPlayer?.zepetoPlayer?.character.GetComponent<Collider>()) {
             return;
         }
-        
         this.HideIcon();
         this.OnTriggerExitEvent?.Invoke();
     }
@@ -114,8 +130,12 @@ export default class Closet extends ZepetoScriptBehaviour {
     
     private OnClickIcon() {
         this.OnClickEvent?.Invoke();
-        console.log("click");
-        this.HideCharacter();
+        console.log(this.myPlayer)
+        console.log(this.myPlayer.gameObject)
+        this.myPlayerController.enabled = false;
+        this.myPlayer.transform.position = this.ClosetHidePosition;
+        this.myPlayerController.enabled = true;
+        //this.HideCharacter();
     }
 
     private HideCharacter() {
