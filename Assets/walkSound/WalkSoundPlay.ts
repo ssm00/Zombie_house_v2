@@ -8,11 +8,9 @@ export default class WalkSoundPlay extends ZepetoScriptBehaviour {
 
     Start() {
         this.walkSound = this.GetComponent<AudioSource>()
-        console.log(`${this.walkSound} startwalksound`)
     }
 
     public on() {
-        console.log(`${this.walkSound} onwalksound`)
         this.walkSound.enabled = true
     }
 
