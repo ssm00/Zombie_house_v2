@@ -10,7 +10,7 @@ import {
     Animation,
     Time,
     Vector3,
-    CharacterController
+    CharacterController, BoxCollider
 } from 'UnityEngine';
 import { Button, Text } from 'UnityEngine.UI';
 import { UnityEvent } from 'UnityEngine.Events';
@@ -18,36 +18,41 @@ import { ZepetoCharacter, ZepetoPlayers } from 'ZEPETO.Character.Controller';
 import { Position } from 'UnityEngine.UIElements';
 import { ZepetoPlayer, ZepetoCamera } from 'ZEPETO.Character.Controller';
 import { collapseTextChangeRangesAcrossMultipleVersions } from 'typescript';
-import Client from "../Client";
- 
+import ClosetManager from "./ClosetManager";
+
 export default class Closet extends ZepetoScriptBehaviour {
 
     // Icon
     @Header("[Icon]")
     @SerializeField() private prefIconCanvas: GameObject;
     @SerializeField() private iconPosition: Transform;
-     
-    // Unity Event    
+    @SerializeField() private humanCatchButton: Button;
+    @SerializeField() private closetCamera: GameObject;
+
+    // Unity Event
     @Header("[Unity Event]")
     public OnClickEvent: UnityEvent;
     public OnTriggerEnterEvent: UnityEvent;
     public OnTriggerExitEvent: UnityEvent;
- 
+
     private _button: Button;
-    private _canvas: Canvas;   
+    private _canvas: Canvas;
     private _cachedWorldCamera: Camera;
     private _isIconActive: boolean = false;
     private _isDoneFirstTrig: boolean = false;
-    
+
     //옷장
-    //private myCamera: ZepetoCamera;
-    private client: Client;
-    public ClosetOutPosition: Vector3; 
-    public ClosetHidePosition: Vector3; 
-    public HidePeopleNum: number;
+    public closetOutPosition: Vector3;
+    public closetHidePosition: Vector3;
+    public isUsing: boolean;
+    private closetId: number;
     private myPlayer: GameObject;
     private myPlayerController: CharacterController;
-    
+    private frontCollider: BoxCollider;
+    private myCamera: ZepetoCamera;
+
+    private closetManager: ClosetManager;
+
     private static instance;
     public static getInstance() {
         if (this.instance == null) {
@@ -57,15 +62,19 @@ export default class Closet extends ZepetoScriptBehaviour {
     }
 
     private Start() {
-        this.client = GameObject.FindObjectOfType<Client>();
-        this.ClosetHidePosition.x=this.transform.position.x;
-        this.ClosetHidePosition.y=this.transform.position.y-1;
-        this.ClosetHidePosition.z=this.transform.position.z;
-        this.HidePeopleNum=0;
-        // 카메라 고정
-        /*ZepetoPlayers.instance.OnAddedLocalPlayer.AddListener(() => {
+        this.closetHidePosition.x=this.transform.position.x;
+        this.closetHidePosition.y=this.transform.position.y;
+        this.closetHidePosition.z=this.transform.position.z+0.3;
+        this.closetOutPosition.x=this.transform.position.x;
+        this.closetOutPosition.y=this.transform.position.y;
+        this.closetOutPosition.z=this.transform.position.z-1.5;
+        this.isUsing = false;
+        this.closetManager = ClosetManager.getInstance();
+        this.frontCollider = this.transform.parent.GetComponent<BoxCollider>();
+        this.humanCatchButton.onClick.AddListener(() => this.getOut());
+        ZepetoPlayers.instance.OnAddedLocalPlayer.AddListener(() => {
             this.myCamera = ZepetoPlayers.instance.LocalPlayer.zepetoCamera
-        });*/
+        });
     }
     private Update() {
         if (this._isDoneFirstTrig && this._canvas?.gameObject.activeSelf) {
@@ -81,8 +90,10 @@ export default class Closet extends ZepetoScriptBehaviour {
             this.myPlayer = coll.gameObject;
             this.myPlayerController = coll.gameObject.GetComponent<CharacterController>();
         }
-        this.ShowIcon();
-        this.OnTriggerEnterEvent?.Invoke();
+        if (!this.isUsing) {
+            this.ShowIcon();
+            this.OnTriggerEnterEvent?.Invoke();
+        }
     }
     
     private OnTriggerExit(coll: Collider) {
@@ -127,24 +138,68 @@ export default class Closet extends ZepetoScriptBehaviour {
     private UpdateIconRotation() {
         this._canvas.transform.LookAt(this._cachedWorldCamera.transform);
     }
-    
+
     private OnClickIcon() {
-        this.OnClickEvent?.Invoke();
-        console.log(this.myPlayer)
-        console.log(this.myPlayer.gameObject)
-        this.myPlayerController.enabled = false;
-        this.myPlayer.transform.position = this.ClosetHidePosition;
-        this.myPlayerController.enabled = true;
-        //this.HideCharacter();
+        if (this.myPlayer.tag == "Me") {
+            this.humanClick();
+        }else if (this.myPlayer.tag == "Zombie") {
+            this.zombieClick();
+        }
     }
 
-    private HideCharacter() {
-        console.log("hide");
-        //this.myCamera.StateMachine.Stop(); 카메라 고정
-        this.client.moveIntoCloset();
+    private humanClick() {
+        this.myPlayerController.enabled = false;
+        this.myPlayer.transform.position = this.closetHidePosition;
+        this.humanCatchButton.gameObject.SetActive(true);
+        this.myPlayerController.enabled = true;
+        this.myCamera.gameObject.SetActive(false);
+        this.closetCamera.gameObject.SetActive(true);
+        this.isUsing = true;
+        //server에 위치 동기화를 위해 들어갔음 알리기
+        this.closetManager.sendServerMoveIntoCloset(this.closetId);
     }
     
-    public DistanceCheck(PlayerPosition:Vector3,HidePosition:Vector3) {
-        return Vector3.Distance(PlayerPosition,HidePosition);
+    
+    //좀비클릭 꺼내기 어떻게 할껀지 고민좀 해보기 struct만들어서 isUsing이랑 sessionId같이 보관해도 될듯
+    private zombieClick() {
+        if (this.isUsing) {
+            
+        }
     }
+    
+    //playerController를 꺼야 position 강제 이동 가능
+    private getOut = () =>  {
+        this.myPlayerController.enabled = false;
+        this.myPlayer.transform.position = this.closetOutPosition;
+        this.myPlayerController.enabled = true;
+        this.humanCatchButton.gameObject.SetActive(false);
+        this.myCamera.gameObject.SetActive(true);
+        this.closetCamera.gameObject.SetActive(false);
+        this.isUsing = false;
+        //server에 위치 동기화를 위해 나왔음 알리기
+        this.closetManager.sendServerExitCloset(this.closetId);
+    }
+
+    /**
+     * 다른 사람 closet 안으로 넣기 (동기화)
+     */
+    public moveOtherIntoCloset(zepetoPlayer: ZepetoPlayer) {
+        zepetoPlayer.character.characterController.enabled = false;
+        zepetoPlayer.character.transform.position = this.closetHidePosition;
+        zepetoPlayer.character.characterController.enabled = true;
+    }
+
+    /**
+     * 다른 사람이 closet안에서 나왔을때 동기화
+     */
+    public exitOtherFromCloset(zepetoPlayer: ZepetoPlayer) {
+        zepetoPlayer.character.characterController.enabled = false;
+        zepetoPlayer.character.transform.position = this.closetOutPosition;
+        zepetoPlayer.character.characterController.enabled = true;
+    }
+
+    public setClosetId(closetId: number) {
+        this.closetId = closetId;
+    }
+
 }   

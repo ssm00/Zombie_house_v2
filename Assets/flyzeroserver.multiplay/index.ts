@@ -1,6 +1,6 @@
 import {Sandbox, SandboxOptions, SandboxPlayer} from "ZEPETO.Multiplay";
 import {DataStorage} from "ZEPETO.Multiplay.DataStorage";
-import {Box, Player, Transform, Vector3} from "ZEPETO.Multiplay.Schema";
+import {Box, ClosetData, Player, Transform, Vector3} from "ZEPETO.Multiplay.Schema";
 
 //server
 export default class extends Sandbox {
@@ -58,7 +58,7 @@ export default class extends Sandbox {
                 infectedPlayer.role = "Zombie";
                 // "Zombie" 역할인 플레이어 수 세기
                 const zombieCount = Array.from(this.state.players.values()).filter(player => player.role === "Zombie").length;
-                this.broadcast("userColorUpdate",zombieCount);
+                this.broadcast("userColorUpdate", zombieCount);
                 //끝 확인
                 if (zombieCount == this.state.players.size) {
                     this.broadcast("zombieWin", "zombieWin");
@@ -77,8 +77,8 @@ export default class extends Sandbox {
                 // "열린박스" 갯수 세기
                 // 열린 박스의 갯수 세기
                 const openedBoxesCount = this.state.boxes.filter(box => box.open).length;
-                this.broadcast("otherOpenBox",boxId);
-                this.broadcast("boxColorUpdate",openedBoxesCount);
+                this.broadcast("otherOpenBox", boxId);
+                this.broadcast("boxColorUpdate", openedBoxesCount);
                 if (openedBoxesCount == 3) {
                     this.broadcast("humanWin", "humanWin");
                     clearInterval(this.mainTimerId);
@@ -96,6 +96,22 @@ export default class extends Sandbox {
         //나가기
         this.onMessage("exit", (client: SandboxPlayer, message: string) => {
             this.tryKick(client.sessionId);
+        });
+
+        /**
+         * 옷장 들어가기
+         * msg는 RoomData에 closetId, isUsing
+         */
+        this.onMessage("moveIntoCloset", (client: SandboxPlayer, message) => {
+            this.broadcastCloset("enter",client, message);
+        });
+
+        /**
+         * 옷장 나오기
+         * msg는 RoomData에 closetId, isUsing
+         */
+        this.onMessage("exitFromCloset", (client: SandboxPlayer, message) => {
+            this.broadcastCloset("exit",client, message);
         });
 
     }
@@ -128,7 +144,7 @@ export default class extends Sandbox {
         this.startGameStartTimer(5)
     }
 
-    private startGameStartTimer(time:number) {
+    private startGameStartTimer(time: number) {
         if (this.state.players.size == this.playerNumber) {
             const intervalId = setInterval(() => {
                 if (time <= 0) {
@@ -167,7 +183,7 @@ export default class extends Sandbox {
     private async lockCancel() {
         try {
             await this.unlock();
-        } catch(e) {
+        } catch (e) {
             console.error(e);
         }
     }
@@ -180,11 +196,11 @@ export default class extends Sandbox {
         const zombiePlayer = this.state.players.get(zombiePlayerSessionId);
         if (zombiePlayer) {
             zombiePlayer.role = "Zombie";
-            this.broadcast("userColorUpdate",1);
+            this.broadcast("userColorUpdate", 1);
         }
     }
 
-    private boxPositionSetting(boxNumber:number) {
+    private boxPositionSetting(boxNumber: number) {
         const transform1 = this.makeTransform(-16.58, 0, -34.55, 0, 0, 0);
         const transform2 = this.makeTransform(-4.6, 0, -27.66, 0, 180, 0);
         const transform3 = this.makeTransform(-2.372, 0, -5.327, 0, 120, 0);
@@ -215,7 +231,7 @@ export default class extends Sandbox {
         return array;
     }
 
-    private makeTransform(px:number,py:number,pz:number,rx:number,ry:number,rz:number) {
+    private makeTransform(px: number, py: number, pz: number, rx: number, ry: number, rz: number) {
         const transform = new Transform();
         transform.position = new Vector3();
         transform.position.x = px;
@@ -254,4 +270,22 @@ export default class extends Sandbox {
             }
         }, 1000); // 1초 간격으로 실행
     }
-}
+
+    /**
+     * closetData를 받을때 closetId, isUsing 정보는 포함되어있음
+     * 누군가 옷장에 들어간 경우 해당 옷장ID, 사용중 여부가 넘어옴
+     * 옷장에서 나온 경우 사용중만 false로 바뀌고 나머지 동일하므로 코드 그냥 재사용
+     * sessionId값만 추가 해서 누가 들어갔는지 전파해 주면됨
+     */
+    private broadcastCloset(enterOrExit: string, client: SandboxPlayer, message: any) {
+        const closetData = new ClosetData();
+        closetData.id = message.closetId;
+        closetData.isUsing = message.isUsing;
+        closetData.sessionId = client.sessionId;
+        if (enterOrExit==="enter") {
+            this.broadcast("otherMoveIntoCloset", closetData, {except: client});
+        }else if (enterOrExit === "exit") {
+            this.broadcast("otherExitCloset", closetData, {except: client});
+        }
+    }
+};
