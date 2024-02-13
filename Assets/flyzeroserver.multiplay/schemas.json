@@ -3,5 +3,6 @@
 "Vector3" : {"x" : "number","y" : "number","z" : "number"},
 "Transform" : {"position" : "Vector3","rotation" : "Vector3"},
 "Player" : {"sessionId" : "string","zepetoHash" : "string","zepetoUserId" : "string","transform" : "Transform","state" : "number","role" : "string","isCrouch" : "boolean"},
-"Box" : {"id" : "number","transform" : "Transform","open" : "boolean"}
+"Box" : {"id" : "number","transform" : "Transform","open" : "boolean"},
+"ClosetData" : {"id" : "number","isUsing" : "boolean","sessionId" : "string"}
 }

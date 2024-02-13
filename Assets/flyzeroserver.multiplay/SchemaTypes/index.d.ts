@@ -30,4 +30,9 @@ declare module "ZEPETO.Multiplay.Schema" {
 		transform: Transform;
 		open: boolean;
 	}
+	class ClosetData extends Schema {
+		id: number;
+		isUsing: boolean;
+		sessionId: string;
+	}
 }
