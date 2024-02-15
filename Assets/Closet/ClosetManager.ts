@@ -1,7 +1,6 @@
-import { ZepetoScriptBehaviour } from 'ZEPETO.Script'
-import {GameObject, Transform} from "UnityEngine";
+import {ZepetoScriptBehaviour} from 'ZEPETO.Script'
+import {GameObject} from "UnityEngine";
 import {ClosetData} from "ZEPETO.Multiplay.Schema";
-import {ZepetoPlayers} from "ZEPETO.Character.Controller";
 import Client from "../Client";
 import Closet from "./Closet";
 import {RoomData} from "ZEPETO.Multiplay";
@@ -67,22 +66,42 @@ export default class ClosetManager extends ZepetoScriptBehaviour {
      * @param closetData
      */
     public otherMoveToCloset(closetData: ClosetData) {
-        const zepetoPlayer = ZepetoPlayers.instance.GetPlayer(closetData.sessionId);
         const closetObject = this.closetList.get(closetData.id);
         const closetTs = closetObject.GetComponentInChildren<Closet>();
-        closetTs.moveOtherIntoCloset(zepetoPlayer);
-        closetTs.isUsing = true;
+        closetTs.moveOtherIntoCloset(closetData.sessionId);
     }
 
     /**
      * 다른사람이 옷장에서 나온 경우 내화면 동기화 하가 T:M(O)
      */
     public otherExitCloset(closetData: ClosetData) {
-        const zepetoPlayer = ZepetoPlayers.instance.GetPlayer(closetData.sessionId);
         const closetObject = this.closetList.get(closetData.id);
         const closetTs = closetObject.GetComponentInChildren<Closet>();
-        closetTs.exitOtherFromCloset(zepetoPlayer);
-        closetTs.isUsing = false;
+        closetTs.exitOtherFromCloset(closetData.sessionId);
+    }
+
+    /**
+     * 내가 좀비인 경우 끌어내기
+     */
+    public sendZombiePullOver(closetId:number, sessionId:string) {
+        const roomData = new RoomData();
+        roomData.Add("closetId", closetId);
+        roomData.Add("sessionId", sessionId);
+        this.client.sendRoomData("zombiePullOver", roomData);
+    }
+
+    /**
+     * 1. 내가 좀비에게 끄집어내진 경우
+     * 2. 남이 좀비에게 끄집어내진 경우
+     */
+    public fetchZombiePullOver(closetData: ClosetData) {
+        const closetObject = this.closetList.get(closetData.id);
+        const closetTs = closetObject.GetComponentInChildren<Closet>();
+        if (closetTs.imUsing) {
+            closetTs.getOut();
+        }else if (closetTs.otherUsing != null) {
+            closetTs.exitOtherFromCloset(closetData.sessionId);
+        }
     }
 
 };

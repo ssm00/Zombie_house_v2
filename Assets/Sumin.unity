@@ -551,32 +551,72 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2461245056440484225, guid: 5219cc59c21eb4b4d9f97ac5da1c7c92, type: 3}
       propertyPath: script.keys.Array.size
-      value: 10
+      value: 11
       objectReference: {fileID: 0}
     - target: {fileID: 2461245056440484225, guid: 5219cc59c21eb4b4d9f97ac5da1c7c92, type: 3}
       propertyPath: script.values.Array.size
-      value: 10
+      value: 11
+      objectReference: {fileID: 0}
+    - target: {fileID: 2461245056440484225, guid: 5219cc59c21eb4b4d9f97ac5da1c7c92, type: 3}
+      propertyPath: script.keys.Array.data[5]
+      value: closetHidePosition
+      objectReference: {fileID: 0}
+    - target: {fileID: 2461245056440484225, guid: 5219cc59c21eb4b4d9f97ac5da1c7c92, type: 3}
+      propertyPath: script.keys.Array.data[6]
+      value: closetOutPosition
+      objectReference: {fileID: 0}
+    - target: {fileID: 2461245056440484225, guid: 5219cc59c21eb4b4d9f97ac5da1c7c92, type: 3}
+      propertyPath: script.keys.Array.data[7]
+      value: humanCatchButton
+      objectReference: {fileID: 0}
+    - target: {fileID: 2461245056440484225, guid: 5219cc59c21eb4b4d9f97ac5da1c7c92, type: 3}
+      propertyPath: script.keys.Array.data[8]
+      value: closetCamera
       objectReference: {fileID: 0}
     - target: {fileID: 2461245056440484225, guid: 5219cc59c21eb4b4d9f97ac5da1c7c92, type: 3}
       propertyPath: script.keys.Array.data[9]
-      value: closetCamera
+      value: otherUsing
       objectReference: {fileID: 0}
     - target: {fileID: 2461245056440484225, guid: 5219cc59c21eb4b4d9f97ac5da1c7c92, type: 3}
       propertyPath: script.keys.Array.data[10]
-      value: closetCamera
+      value: imUsing
+      objectReference: {fileID: 0}
+    - target: {fileID: 2461245056440484225, guid: 5219cc59c21eb4b4d9f97ac5da1c7c92, type: 3}
+      propertyPath: script.keys.Array.data[11]
+      value: getOut
+      objectReference: {fileID: 0}
+    - target: {fileID: 2461245056440484225, guid: 5219cc59c21eb4b4d9f97ac5da1c7c92, type: 3}
+      propertyPath: script.values.Array.data[5]
+      value: '{"type":"UnityEngine.Vector3, UnityEngine.CoreModule","value":"{\"x\":0.0,\"y\":0.0,\"z\":0.0}"}'
+      objectReference: {fileID: 0}
+    - target: {fileID: 2461245056440484225, guid: 5219cc59c21eb4b4d9f97ac5da1c7c92, type: 3}
+      propertyPath: script.values.Array.data[7]
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 2461245056440484225, guid: 5219cc59c21eb4b4d9f97ac5da1c7c92, type: 3}
+      propertyPath: script.values.Array.data[9]
+      value: '{"type":"System.String, mscorlib","value":""}'
+      objectReference: {fileID: 0}
+    - target: {fileID: 2461245056440484225, guid: 5219cc59c21eb4b4d9f97ac5da1c7c92, type: 3}
+      propertyPath: script.values.Array.data[10]
+      value: '{"type":"System.Boolean, mscorlib","value":"False"}'
       objectReference: {fileID: 0}
     - target: {fileID: 2461245056440484225, guid: 5219cc59c21eb4b4d9f97ac5da1c7c92, type: 3}
       propertyPath: script.unityValues.Array.size
-      value: 10
+      value: 11
       objectReference: {fileID: 0}
     - target: {fileID: 2461245056440484225, guid: 5219cc59c21eb4b4d9f97ac5da1c7c92, type: 3}
-      propertyPath: script.unityValues.Array.data[8]
+      propertyPath: script.unityValues.Array.data[7]
       value: 
       objectReference: {fileID: 822004184}
     - target: {fileID: 2461245056440484225, guid: 5219cc59c21eb4b4d9f97ac5da1c7c92, type: 3}
-      propertyPath: script.unityValues.Array.data[9]
+      propertyPath: script.unityValues.Array.data[8]
       value: 
       objectReference: {fileID: 1477857905}
+    - target: {fileID: 2461245056440484225, guid: 5219cc59c21eb4b4d9f97ac5da1c7c92, type: 3}
+      propertyPath: script.unityValues.Array.data[9]
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 3673103877466085931, guid: 5219cc59c21eb4b4d9f97ac5da1c7c92, type: 3}
       propertyPath: m_Name
       value: Closet
@@ -1972,7 +2012,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1076435062
 RectTransform:
   m_ObjectHideFlags: 0

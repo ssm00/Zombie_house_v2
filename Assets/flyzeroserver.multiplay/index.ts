@@ -5,7 +5,7 @@ import {Box, ClosetData, Player, Transform, Vector3} from "ZEPETO.Multiplay.Sche
 //server
 export default class extends Sandbox {
 
-    private playerNumber = 5;
+    private playerNumber = 2;
     private mainTimerId: number = 0;
 
     //서버에서 사용할 함수 생성 onMessage에 등록하면 해당 messageType으로 호출 해서 사용가능 클라이언트가 사용하는 함수들
@@ -114,6 +114,16 @@ export default class extends Sandbox {
             this.broadcastCloset("exit",client, message);
         });
 
+        /**
+         * 좀비가 끄집어내기
+         */
+        this.onMessage("zombiePullOver", (client: SandboxPlayer, message) => {
+            const closetData = new ClosetData();
+            closetData.id = message.closetId;
+            closetData.sessionId = message.sessionId;
+            this.broadcast("zombiePullOverFetch", closetData);
+        });
+
     }
 
     async onJoin(client: SandboxPlayer) {
@@ -174,7 +184,7 @@ export default class extends Sandbox {
     private async startGameSetting() {
         if (this.state.players.size == this.playerNumber) {
             this.zombieSelect();
-            this.boxPositionSetting(3);
+            this.boxPositionSetting(4);
             this.mainGameTimer(300);
             await this.lock();
         }
@@ -189,10 +199,11 @@ export default class extends Sandbox {
     }
 
     private zombieSelect() {
-        const zombieIndex = Math.floor(Math.random() * this.playerNumber);
+        //const zombieIndex = Math.floor(Math.random() * this.playerNumber);
         const playerList = Array.from(this.state.players.keys());
         //debug모드 랜덤 0번으로 고정 바꾸기
-        const zombiePlayerSessionId = playerList[zombieIndex];
+        //const zombiePlayerSessionId = playerList[zombieIndex];
+        const zombiePlayerSessionId = playerList[0];
         const zombiePlayer = this.state.players.get(zombiePlayerSessionId);
         if (zombiePlayer) {
             zombiePlayer.role = "Zombie";

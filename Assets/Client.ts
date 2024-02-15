@@ -165,6 +165,10 @@ export default class Client extends ZepetoScriptBehaviour {
             room.AddMessageHandler("otherExitCloset", (closetData: ClosetData) => {
                 this.closetManager.otherExitCloset(closetData);
             });
+
+            room.AddMessageHandler("zombiePullOverFetch", (closetData: ClosetData) => {
+                this.closetManager.fetchZombiePullOver(closetData);
+            });
         };
 
         this.StartCoroutine(this.SendMessageLoop(0.05))
@@ -539,4 +543,5 @@ export default class Client extends ZepetoScriptBehaviour {
     public sendRoomData(type: string, data: RoomData) {
         this.room.Send(type, data.GetObject());
     }
+
 }
