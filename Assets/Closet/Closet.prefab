@@ -66,11 +66,12 @@ MonoBehaviour:
     - OnClickEvent
     - OnTriggerEnterEvent
     - OnTriggerExitEvent
-    - hidePeopleNum
+    - otherUsing
     - closetHidePosition
     - closetOutPosition
     - humanCatchButton
     - closetCamera
+    - imUsing
     unityValues:
     - {fileID: 5492554559315844802, guid: 3ae92f20b71fdaf449e6283e526097fb, type: 3}
     - {fileID: 2998679722793767582}
@@ -82,17 +83,19 @@ MonoBehaviour:
     - {fileID: 0}
     - {fileID: 0}
     - {fileID: 5580200211796675899}
+    - {fileID: 0}
     values:
     - 
     - 
     - '{"type":"UnityEngine.Events.UnityEvent, UnityEngine.CoreModule","value":"{\"m_PersistentCalls\":{\"m_Calls\":[]}}"}'
     - '{"type":"UnityEngine.Events.UnityEvent, UnityEngine.CoreModule","value":"{\"m_PersistentCalls\":{\"m_Calls\":[]}}"}'
     - '{"type":"UnityEngine.Events.UnityEvent, UnityEngine.CoreModule","value":"{\"m_PersistentCalls\":{\"m_Calls\":[]}}"}'
-    - '{"type":"System.Single, mscorlib","value":"0"}'
+    - '{"type":"System.String, mscorlib","value":""}'
     - '{"type":"UnityEngine.Vector3, UnityEngine.CoreModule","value":"{\"x\":0.0,\"y\":0.0,\"z\":0.0}"}'
     - '{"type":"UnityEngine.Vector3, UnityEngine.CoreModule","value":"{\"x\":0.0,\"y\":0.0,\"z\":0.0}"}'
     - 
     - 
+    - '{"type":"System.Boolean, mscorlib","value":"False"}'
     unityArrayValues: []
     arrayValues: []
     script: {fileID: 4458252877524076426, guid: 804ebe908849be44ab76415fc26cdd36, type: 3}
@@ -121,7 +124,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2998679722793767577}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.495, z: -0.76}
+  m_LocalPosition: {x: 0, y: 0.15, z: -0.76}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 2998679721405124992}
@@ -220,9 +223,10 @@ GameObject:
   - component: {fileID: 418862893013009858}
   - component: {fileID: 7717627749000001728}
   - component: {fileID: 3647581638482220756}
-  - component: {fileID: 4572801278161751915}
-  - component: {fileID: 5889239701022044786}
-  - component: {fileID: 210731558978946644}
+  - component: {fileID: 8576304309608071176}
+  - component: {fileID: 158437542861032922}
+  - component: {fileID: 8680382856095770229}
+  - component: {fileID: 2649010994911447857}
   m_Layer: 6
   m_Name: GH_BookshelfC_001-base
   m_TagString: Untagged
@@ -305,9 +309,9 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1.8, y: 2.5296586, z: 0}
-  m_Center: {x: 0, y: 1.2648293, z: 0.39633107}
---- !u!65 &4572801278161751915
+  m_Size: {x: 1.8172479, y: 2.4, z: 0}
+  m_Center: {x: -0.0007851124, y: 1.22, z: 0.36113796}
+--- !u!65 &8576304309608071176
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -318,9 +322,9 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 0, y: 2.5296586, z: 0.79965603}
-  m_Center: {x: 0.934963, y: 1.2648293, z: 0}
---- !u!65 &5889239701022044786
+  m_Size: {x: 0, y: 2.4189236, z: 0.7181904}
+  m_Center: {x: -0.72, y: 1.2094618, z: -0.008406848}
+--- !u!65 &158437542861032922
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -331,9 +335,9 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 0, y: 2.5296586, z: 0.79965603}
-  m_Center: {x: -0.934963, y: 1.2648293, z: 0}
---- !u!65 &210731558978946644
+  m_Size: {x: 0, y: 2.5, z: 0.78}
+  m_Center: {x: 0.76, y: 1.23, z: 0}
+--- !u!65 &8680382856095770229
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -344,8 +348,21 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1.8699259, y: 0, z: 0.79965603}
-  m_Center: {x: 0, y: 2.5296588, z: -0}
+  m_Size: {x: 1.8699259, y: 2.5296586, z: 0}
+  m_Center: {x: 0, y: 1.2648293, z: -0.2}
+--- !u!65 &2649010994911447857
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3341208602193876918}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 1.8699259, y: 2.5296586, z: 0}
+  m_Center: {x: 0, y: 1.2648293, z: -0.36}
 --- !u!1 &3673103877466085931
 GameObject:
   m_ObjectHideFlags: 0
@@ -355,7 +372,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 463739477254964891}
-  - component: {fileID: 2762940399082696013}
   m_Layer: 6
   m_Name: Closet
   m_TagString: Untagged
@@ -380,19 +396,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
---- !u!65 &2762940399082696013
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3673103877466085931}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 1.8142979, y: 2.4518814, z: 0}
-  m_Center: {x: 0.0050860643, y: 1.2512946, z: -0.21}
 --- !u!1001 &7805892646372222430
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -418,7 +421,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6464189349213000260, guid: ce6d7795d7cf67348a9ba53f2669ef98, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.7
+      value: 1.6
       objectReference: {fileID: 0}
     - target: {fileID: 6464189349213000260, guid: ce6d7795d7cf67348a9ba53f2669ef98, type: 3}
       propertyPath: m_LocalPosition.z
