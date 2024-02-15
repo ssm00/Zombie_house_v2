@@ -11,10 +11,14 @@ export default class WalkSoundPlay extends ZepetoScriptBehaviour {
     }
 
     public on() {
-        this.walkSound.enabled = true
+        if (this.walkSound) {
+            this.walkSound.enabled = true;
+        }
     }
 
     public off() {
-        this.walkSound.enabled = false
+        if (this.walkSound) {
+            this.walkSound.enabled = false
+        }
     }
 }
