@@ -38,14 +38,6 @@ export default class Closet extends ZepetoScriptBehaviour {
 
     private closetManager: ClosetManager;
 
-    private static instance;
-    public static getInstance() {
-        if (this.instance == null) {
-            this.instance = GameObject.FindObjectOfType<Closet>();
-        }
-        return this.instance
-    }
-
     private Start() {
         this.closetHidePosition.x=this.transform.position.x;
         this.closetHidePosition.y=this.transform.position.y;

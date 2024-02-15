@@ -70,8 +70,6 @@ export default class Client extends ZepetoScriptBehaviour {
     private closetManager: ClosetManager;
 
     //game
-    private closet: Closet;
-
     private room: Room;
     private myPlayer: ZepetoPlayer;
     private myCamera: ZepetoCamera;
@@ -91,7 +89,6 @@ export default class Client extends ZepetoScriptBehaviour {
         this.startTimer = GameObject.Find("PlayerCanvas").GetComponentInChildren<TextMeshProUGUI>();
         this.boxManager = BoxManager.getInstance();
         this.walkSoundManager = WalkSoundManager.getInstance();
-        this.closet = Closet.getInstance();
         this.userColorManager = UserColorManager.getInstance();
         this.boxColorManager = BoxColorManager.getInstance();
         this.closetManager = ClosetManager.getInstance();
