@@ -72,7 +72,6 @@ export default class Closet extends ZepetoScriptBehaviour {
     }
     
     private OnTriggerEnter(coll: Collider) {
-        console.log("enter");
         if (coll != ZepetoPlayers.instance.LocalPlayer?.zepetoPlayer?.character.GetComponent<Collider>() || coll.gameObject.tag == "Player") {
             return;
         }
@@ -80,7 +79,6 @@ export default class Closet extends ZepetoScriptBehaviour {
             this.myPlayer = coll.gameObject;
             this.myPlayerController = coll.gameObject.GetComponent<CharacterController>();
         }
-        console.log(this.myPlayer.tag);
         if ((this.myPlayer.tag == "Me" && !this.otherUsing) || this.myPlayer.tag == "Zombie") {
             this.ShowIcon();
             this.OnTriggerEnterEvent?.Invoke();

@@ -346,7 +346,6 @@ export default class Client extends ZepetoScriptBehaviour {
             if (this.myPlayerAnimator.GetBool("isZombie") == false) {
                 this.myPlayerAnimator.SetBool("isZombie", true);
                 this.myPlayer.character.gameObject.tag = "Zombie"
-                console.log(`좀비 설정성공 ${this.room.SessionId} , ${this.myPlayer.character}`);
                 //zombieHand catchZone collider 부착
                 const hand: UnityEngine.Transform = this.myPlayerAnimator.GetBoneTransform(this.bodyBone);
                 const catchZone = Object.Instantiate(this.catchZone, hand) as GameObject;
@@ -521,9 +520,7 @@ export default class Client extends ZepetoScriptBehaviour {
     }
 
     private updatePlayerNumber(playerNum: number) {
-        console.log(playerNum)
         this.startTimer.text = `${playerNum} / 5`
-        console.log(`${this.startTimer.text}`)
     }
 
     Update() {
