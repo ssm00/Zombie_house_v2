@@ -1,6 +1,5 @@
-import { ZepetoScriptBehaviour } from 'ZEPETO.Script'
-import {AudioSource, Transform, Vector3} from "UnityEngine";
-import {Player} from "ZEPETO.Multiplay.Schema";
+import {ZepetoScriptBehaviour} from 'ZEPETO.Script'
+import {AudioSource} from "UnityEngine";
 
 export default class WalkSoundPlay extends ZepetoScriptBehaviour {
 
