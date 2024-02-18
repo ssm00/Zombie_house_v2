@@ -89,6 +89,7 @@ export default class extends Sandbox {
         });
 
         //다시하기
+        //삭제 고려 아무것도 없음 기능
         this.onMessage("again", (client: SandboxPlayer, message: string) => {
             this.broadcast("attackMotionInvoke", client.sessionId)
         });
@@ -124,6 +125,15 @@ export default class extends Sandbox {
             this.broadcast("zombiePullOverFetch", closetData);
         });
 
+        // 캐릭터 스킬 사용
+        /**
+         * 런지 
+         */
+        this.onMessage("lungeUsing", (client: SandboxPlayer, message) => {
+            this.broadcast("lungeUsing", client.sessionId, {except: client});
+        });
+        
+
     }
 
     async onJoin(client: SandboxPlayer) {
@@ -131,8 +141,16 @@ export default class extends Sandbox {
 
         const player = new Player();
         player.sessionId = client.sessionId;
-        player.role = "Human"
-        player.isCrouch = false
+        player.role = "Human";
+        player.isCrouch = false;
+        /**
+         * 좀비 챔피언선택용 기본은 노멀
+         * Normal
+         * MoveSpeedUp
+         * Lunge
+         * AttackSpeedUp
+         */
+        player.championName = "Normal";
 
         if (client.hashCode) {
             player.zepetoHash = client.hashCode;

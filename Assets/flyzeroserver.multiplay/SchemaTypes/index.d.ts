@@ -24,6 +24,7 @@ declare module "ZEPETO.Multiplay.Schema" {
 		state: number;
 		role: string;
 		isCrouch: boolean;
+		championName: string;
 	}
 	class Box extends Schema {
 		id: number;

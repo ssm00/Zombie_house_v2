@@ -20,7 +20,6 @@ export default class CatchManager extends ZepetoScriptBehaviour {
      * Zombie -> 나머지 좀비
      */
     private OnTriggerEnter(col:Collision) {
-        console.log(`ontrigger ${col}`)
         if (col.gameObject.tag == "Player") {
             const sessionId: string = col.gameObject.GetComponent<CatchId>().getSessionId();
             this.client.attackLogic(sessionId);
