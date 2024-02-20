@@ -49,7 +49,6 @@ import {CurrencyMessage} from './flyzeroserver.multiplay/index';
  */
 export default class Client extends ZepetoScriptBehaviour {
 
-
     public multiPlay : ZepetoWorldMultiplay;
 
     //ui
@@ -59,12 +58,13 @@ export default class Client extends ZepetoScriptBehaviour {
     public startTimer : TextMeshProUGUI;
     public inGameCanvas: Canvas;
     public lobbyCanvas: Canvas;
+    public userColorManager: UserColorManager;
+    public boxColorManager: BoxColorManager;
+    public gameStateCanvas: Canvas;
     //살릴지 확인 필요
     // public againButton: Button;
     // public exitButton: Button;
     public rankText: TextMeshProUGUI;
-    public userColorManager: GameObject;
-    public boxColorManager: GameObject;
 
     //movement
     private speedValue: number=0;
@@ -121,7 +121,6 @@ export default class Client extends ZepetoScriptBehaviour {
     private catchHumanCount: number=0;
     private openBoxCount: number=0;
 
-
     //game
     private room: Room;
     private myPlayer: ZepetoPlayer;
@@ -141,10 +140,11 @@ export default class Client extends ZepetoScriptBehaviour {
     Start() {
         this.boxManager = BoxManager.getInstance();
         this.walkSoundManager = WalkSoundManager.getInstance();
-
         this.closetManager = ClosetManager.getInstance();
         this.championManager = ChampionManager.getInstance();
         this.ringManager = RingManager.getInstance();
+        this.userColorManager = UserColorManager.getInstance();
+        this.boxColorManager = BoxColorManager.getInstance();
         // this.againButton.gameObject.SetActive(false);
         // this.exitButton.gameObject.SetActive(false);
         // minimap
@@ -152,6 +152,7 @@ export default class Client extends ZepetoScriptBehaviour {
         //rank
         this.resultPanel.SetActive(false);
         this.rankPanel.SetActive(false);
+        this.gameStateCanvas.gameObject.SetActive(false);
         //lobby canvas 가져오기
         this.crouchButton.onClick.AddListener(() => {
             this.doCrouch();
@@ -193,11 +194,12 @@ export default class Client extends ZepetoScriptBehaviour {
             });
 
             room.AddMessageHandler("userColorUpdate", (zombieCount: number) => {
-                this.userColorManager.GetComponent<UserColorManager>().updateColor(zombieCount);
+                console.log(this.userColorManager, "USERCOLOR")
+                this.userColorManager.updateColor(zombieCount);
             });
 
             room.AddMessageHandler("boxColorUpdate", (openBoxCount: number) => {
-                this.boxColorManager.GetComponent<BoxColorManager>().updateColor(openBoxCount);
+                this.boxColorManager.updateColor(openBoxCount);
             });
 
             room.AddMessageHandler("otherOpenBox", (boxId: number) => {
@@ -233,6 +235,8 @@ export default class Client extends ZepetoScriptBehaviour {
             });
 
             room.AddMessageHandler("gameOver", (msg: string) => {
+                this.lobbyCanvas.gameObject.SetActive(true);
+                this.gameStateCanvas.gameObject.SetActive(false);
                 this.updateWinUi(msg);
             });
             //rank 점수 받아오기
@@ -264,13 +268,19 @@ export default class Client extends ZepetoScriptBehaviour {
             room.AddMessageHandler("gameStartCanvas", (message) => {
                 this.lobbyCanvas.gameObject.SetActive(false);
                 this.inGameCanvas.gameObject.SetActive(true);
+                this.gameStateCanvas.gameObject.SetActive(true);
             });
 
             //게임 시작시 텔레포트
             room.AddMessageHandler("startTeleport", (message) => {
-                const startPosition = new UnityEngine.Vector3(0,0,0);
-                this.myPlayer.character.Teleport(startPosition, Quaternion.identity)
+                this.everyoneTeleport();
             });
+
+            room.AddMessageHandler("lobbyTelePort", (sessionId: string) => {
+                const lobbyPosition = new UnityEngine.Vector3(17, 0, 154);
+                ZepetoPlayers.instance.GetPlayer(sessionId.toString()).character.Teleport(lobbyPosition, Quaternion.identity)
+            });
+
         };
         this.StartCoroutine(this.SendMessageLoop(0.05))
         this.Invoke("updateWinUiTest", 5);
@@ -589,7 +599,7 @@ export default class Client extends ZepetoScriptBehaviour {
     }
 
     private updateWinUi(msg:string) {
-        this.winText.text = msg;
+        this.winText.text = msg.toString();
         this.gameWinText.text = `-${msg}-`;
         //게임 결과 화면 띄우기
         this.resultPanel.SetActive(true);
@@ -602,11 +612,11 @@ export default class Client extends ZepetoScriptBehaviour {
         //인간- 상자 열기 하나당 +20
         //코인
         //기본코인
-        //좀비win - 숙주좀비+30, 일반좀비+20
-        //인간win - 인간+30
+        //좀비win - 숙주좀비+26, 일반좀비+12
+        //인간win - 인간+26
         //활동코인
-        //좀비- 인간 감염 한명당 +7
-        //인간- 상자 열기 하나당 +7
+        //좀비- 인간 감염 한명당 +11
+        //인간- 상자 열기 하나당 +11
         this.score.text = `${this.rankScore}`
         var plusScore = 0
         var earnMoney = 0
@@ -621,20 +631,20 @@ export default class Client extends ZepetoScriptBehaviour {
                 this.deAliveCoin.SetActive(false);
                 this.deStartZombieCoin.SetActive(true);
                 this.deZombieCoin.SetActive(false);
-                this.deStartZombieCoinText.text = "30";
-                earnMoney += 30;
+                this.deStartZombieCoinText.text = "26";
+                earnMoney += 26;
             }
             else {
                 plusScore += -20
                 this.deAliveImage.color = Color.gray;
                 this.deStartZombieImage.color = Color.gray;
                 this.deZombieImage.color = Color.white;
-                this.deStartZombieScore.text = "-20";
+                this.deZombieScore.text = "-20";
                 this.deAliveCoin.SetActive(false);
                 this.deStartZombieCoin.SetActive(false);
                 this.deZombieCoin.SetActive(true);
-                this.deZombieCoinText.text = "20";
-                earnMoney += 20;
+                this.deZombieCoinText.text = "12";
+                earnMoney += 12;
             }
         }
         else if(msg == "Human Win!!"){
@@ -643,12 +653,12 @@ export default class Client extends ZepetoScriptBehaviour {
                 this.deAliveImage.color = Color.white;
                 this.deStartZombieImage.color = Color.gray;
                 this.deZombieImage.color = Color.gray;
-                this.deStartZombieScore.text = "+100";
+                this.deAliveScore.text = "+100";
                 this.deAliveCoin.SetActive(true);
                 this.deStartZombieCoin.SetActive(false);
                 this.deZombieCoin.SetActive(false);
-                this.deAliveCoinText.text = "30";
-                earnMoney += 30;
+                this.deAliveCoinText.text = "26";
+                earnMoney += 26;
             }
             else if(this.startZombie == true) {
                 plusScore += -50
@@ -666,7 +676,7 @@ export default class Client extends ZepetoScriptBehaviour {
                 this.deAliveImage.color = Color.gray;
                 this.deStartZombieImage.color = Color.gray;
                 this.deZombieImage.color = Color.white;
-                this.deStartZombieScore.text = "-20";
+                this.deZombieScore.text = "-20";
                 this.deAliveCoin.SetActive(false);
                 this.deStartZombieCoin.SetActive(false);
                 this.deZombieCoin.SetActive(true);
@@ -679,9 +689,9 @@ export default class Client extends ZepetoScriptBehaviour {
         this.deHumanCatchCountScore.text = `+${this.catchHumanCount*20}`;
         this.deBoxopenCountText.text = `x${this.openBoxCount}`;
         this.deBoxopenCountScore.text = `+${this.openBoxCount*20}`;
-        earnMoney += this.catchHumanCount*7 + this.openBoxCount*7;
-        this.deHumanCatchCountCoinText.text = `${this.catchHumanCount*7}`;
-        this.deBoxopenCountCoinText.text = `${this.openBoxCount*7}`;
+        earnMoney += this.catchHumanCount*11 + this.openBoxCount*11;
+        this.deHumanCatchCountCoinText.text = `${this.catchHumanCount*11}`;
+        this.deBoxopenCountCoinText.text = `${this.openBoxCount*11}`;
         //총 점수 계산 및 랭크 점수 추가
         plusScore += activScore;
         this.rankScore += plusScore;
@@ -700,7 +710,14 @@ export default class Client extends ZepetoScriptBehaviour {
         this.startZombie = false;
         this.catchHumanCount = 0;
         this.openBoxCount = 0;
+    }
 
+    //나 포함 모든 플레이어 게임 시작 위치로 텔레포트
+    private everyoneTeleport(){
+        const startPosition = new UnityEngine.Vector3(0,0,0);
+        for (const [key, player] of this.currentPlayers) {
+            ZepetoPlayers.instance.GetPlayer(player.sessionId).character.Teleport(startPosition, Quaternion.identity);
+        }
     }
 
     private updatePlayerNumber(playerNum: number) {
@@ -717,7 +734,7 @@ export default class Client extends ZepetoScriptBehaviour {
 
     //숙주좀비 설정
     private setStartZombie(message: string) {
-        const isLocal = this.room.SessionId === message;
+        const isLocal = this.room.SessionId === message.toString();
         if (isLocal) {
             this.startZombie = true;
         } else {
@@ -737,7 +754,10 @@ export default class Client extends ZepetoScriptBehaviour {
     }
 
     private goLobby(){
-
+        this.inGameCanvas.gameObject.SetActive(false);
+        const position = new UnityEngine.Vector3(17, 0, 154);
+        this.myPlayer.character.Teleport(position, Quaternion.identity);
+        this.room.Send("goLobby","goLobby")
     }
 
     Update() {

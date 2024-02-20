@@ -8180,7 +8180,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 0}
   m_HandleRect: {fileID: 0}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -10645,6 +10645,7 @@ MonoBehaviour:
     - contentParent
     - prefItem
     - itemImage
+    - informationPref
     unityValues:
     - {fileID: 8780930349012436757}
     - {fileID: 8780930349012436759}
@@ -10652,6 +10653,7 @@ MonoBehaviour:
     - {fileID: 8780930349012436711}
     - {fileID: 5690481254403217797, guid: eb83dcc974e6f47d4b443d4a97e21666, type: 3}
     - {fileID: 0}
+    - {fileID: 3895059395384919138, guid: ed1ba6b2be97d49b6a09391f23cf545b, type: 3}
     values:
     - 
     - 
@@ -10660,6 +10662,7 @@ MonoBehaviour:
     - 
     - '{"type":"ZEPETO.Script.ZepetoScriptSerializer+ArrayInfo, ZEPETO.Script","value":"{\"offset\":0,\"length\":8,\"type\":\"UnityEngine.Object,
       UnityEngine.CoreModule\",\"isUnity\":true}"}'
+    - 
     unityArrayValues:
     - {fileID: 21300000, guid: a4d93a7d908fb7f4f883f26a490f9ec7, type: 3}
     - {fileID: 21300000, guid: 29289b32132860e45b204d6ab952daef, type: 3}
@@ -10708,7 +10711,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 5}
-  m_SizeDelta: {x: 55.418995, y: 50}
+  m_SizeDelta: {x: 56, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8780930349012436249
 CanvasRenderer:

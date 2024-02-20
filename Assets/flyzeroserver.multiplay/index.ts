@@ -87,7 +87,6 @@ export default class extends Sandbox {
                     this.broadcast("gameOver", "Human Win!!");
                     clearInterval(this.mainTimerId);
                     this.lockCancel();
-                    //this.kickAll();
                 }
             }
         });
@@ -199,6 +198,11 @@ export default class extends Sandbox {
 
             this.RemoveInventory(client, productId);
         });
+
+        //로비 이동
+        this.onMessage("goLobby", (client, message) => {
+            this.broadcast("lobbyTelePort", client.sessionId)
+        });
     }
 
     async onJoin(client: SandboxPlayer) {
@@ -255,7 +259,7 @@ export default class extends Sandbox {
         this.mainTimerId = setInterval(() => {
             if (time <= 0) {
                 clearInterval(this.mainTimerId); // 타이머 중지
-                this.broadcast("gameOver", "Zombie Win!!");
+                this.broadcast("gameOver", "Human Win!!");
             } else {
                 this.broadcast("mainTimer", time)
                 time--;
@@ -270,7 +274,7 @@ export default class extends Sandbox {
             this.broadcast("gameStartCanvas", "gameStartCanvas");
             this.zombieSelect();
             this.boxPositionSetting(4);
-            this.mainGameTimer(300);
+            this.mainGameTimer(10);
             await this.lock();
         }
     }
@@ -322,7 +326,12 @@ export default class extends Sandbox {
         const transform8 = this.makeTransform(-26.19, 0, -15.11, 0, 0, 0);
         const transform9 = this.makeTransform(3.96, 0, -3.47, 0, 0, 0);
         const transform10 = this.makeTransform(1.68, 0, -15.57, 0, 0, 0);
-        let boxTransformList: Transform[] = [transform1, transform2, transform3, transform4, transform5, transform6, transform7, transform8, transform9, transform10];
+        const transform11 = this.makeTransform(-19.52, 0, -26.03, 0, 0, 0);
+        const transform12 = this.makeTransform(3.8, 0, 3.6, 0, -90, 0);
+        const transform13 = this.makeTransform(-19.89, 0, 4.7, 0, 90, 0);
+        const transform14 = this.makeTransform(-2.78, 0, -18.99, 0, -90, 0);
+        const transform15 = this.makeTransform(-29.87, 0, -15.44, 0, 90, 0);
+        let boxTransformList: Transform[] = [transform1, transform2, transform3, transform4, transform5, transform6, transform7, transform8, transform9, transform10, transform11, transform12, transform13, transform14, transform15];
         let selectedTransformList = this.shuffleArray(boxTransformList).slice(0, boxNumber);
         let boxId = 0;
         selectedTransformList.forEach((boxTransform) => {

@@ -8325,12 +8325,14 @@ MonoBehaviour:
     - contentParent
     - prefItem
     - itemImage
+    - informationPref
     unityValues:
     - {fileID: 971663735067330984}
     - {fileID: 971663735067330986}
     - {fileID: 971663735067330979}
     - {fileID: 971663735067330650}
     - {fileID: 5690481254403217797, guid: eb83dcc974e6f47d4b443d4a97e21666, type: 3}
+    - {fileID: 0}
     - {fileID: 0}
     values:
     - 
@@ -8340,6 +8342,7 @@ MonoBehaviour:
     - 
     - '{"type":"ZEPETO.Script.ZepetoScriptSerializer+ArrayInfo, ZEPETO.Script","value":"{\"offset\":0,\"length\":5,\"type\":\"UnityEngine.Object,
       UnityEngine.CoreModule\",\"isUnity\":true}"}'
+    - 
     unityArrayValues:
     - {fileID: 21300000, guid: b92cb5e6c17bd4f1195fa68408cb555e, type: 3}
     - {fileID: 21300000, guid: 1582f13d9125544a2ad2f6435521522a, type: 3}
