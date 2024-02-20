@@ -219,6 +219,23 @@ export default class Client extends ZepetoScriptBehaviour {
             room.AddMessageHandler("zombiePullOverFetch", (closetData: ClosetData) => {
                 this.closetManager.fetchZombiePullOver(closetData);
             });
+            room.AddMessageHandler("gameOver", (msg: string) => {
+                this.updateWinUi(msg);
+            });
+            //rank 점수 받아오기
+            room.AddMessageHandler("rankScore", (rankScore: number) => {
+                console.log("rankScore", rankScore)
+                this.updatePlayerRankScore(rankScore);
+            });
+            //숙주좀비 설정
+            room.AddMessageHandler("setStartZombie", (message: boolean) => {
+                console.log("setStartZombie", message)
+                this.setStartZombie(message);
+            });
+            //내가 인간을 감염 시켰을 때
+            room.AddMessageHandler("infectOther", (message: number) =>{
+                this.addCatchHumanCount(message);
+            });
 
             room.AddMessageHandler("gameOver", (msg: string) => {
                 this.updateWinUi(msg);
@@ -715,7 +732,7 @@ export default class Client extends ZepetoScriptBehaviour {
         //minimap
         this.minimapManager.updateMe(this.myPlayer);
     }
-
+    
     private doExit() {
         this.room.Send("exit", "exit");
     }
