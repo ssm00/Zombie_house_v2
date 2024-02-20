@@ -7,7 +7,7 @@ import {loadInventory} from "ZEPETO.Multiplay.Inventory";
 //server
 export default class extends Sandbox {
 
-    private playerNumber = 2;
+    private playerNumber = 1;
     private mainTimerId: number = 0;
 
     //서버에서 사용할 함수 생성 onMessage에 등록하면 해당 messageType으로 호출 해서 사용가능 클라이언트가 사용하는 함수들
@@ -256,7 +256,6 @@ export default class extends Sandbox {
             if (time <= 0) {
                 clearInterval(this.mainTimerId); // 타이머 중지
                 this.broadcast("gameOver", "Zombie Win!!");
-                this.kickAll();
             } else {
                 this.broadcast("mainTimer", time)
                 time--;
@@ -266,12 +265,28 @@ export default class extends Sandbox {
 
     private async startGameSetting() {
         if (this.state.players.size == this.playerNumber) {
+            this.broadcast("startTeleport","startTeleport");
+            await this.pause(3);
             this.broadcast("gameStartCanvas", "gameStartCanvas");
             this.zombieSelect();
             this.boxPositionSetting(4);
             this.mainGameTimer(300);
             await this.lock();
         }
+    }
+
+    private pause(seconds: number): Promise<void> {
+        let remainingTime = seconds;
+        return new Promise<void>((resolve) => {
+            const pauseTimerId = setInterval(() => {
+                if (remainingTime <= 0) {
+                    clearInterval(pauseTimerId); // Timer stopped
+                    resolve();
+                } else {
+                    remainingTime--;
+                }
+            }, 1000); // 1-second interval
+        });
     }
 
     private async lockCancel() {
@@ -291,7 +306,7 @@ export default class extends Sandbox {
         const zombiePlayer = this.state.players.get(zombiePlayerSessionId);
         if (zombiePlayer) {
             zombiePlayer.role = "Zombie";
-            zombiePlayer.send("setStartZombie", true);
+            this.broadcast("setStartZombie", zombiePlayer.sessionId);
             this.broadcast("userColorUpdate",1);
         }
     }
@@ -354,18 +369,18 @@ export default class extends Sandbox {
         }
     }
 
-    private kickAll() {
-        let time = 3;
-        setInterval(() => {
-            if (time <= 0) {
-                this.state.players.forEach((player) => {
-                    this.tryKick(player.sessionId);
-                });
-            } else {
-                time--;
-            }
-        }, 1000); // 1초 간격으로 실행
-    }
+    // private kickAll() {
+    //     let time = 3;
+    //     setInterval(() => {
+    //         if (time <= 0) {
+    //             this.state.players.forEach((player) => {
+    //                 this.tryKick(player.sessionId);
+    //             });
+    //         } else {
+    //             time--;
+    //         }
+    //     }, 1000); // 1초 간격으로 실행
+    // }
 
     /**
      * closetData를 받을때 closetId, isUsing 정보는 포함되어있음
@@ -514,7 +529,7 @@ interface MoveSpeedSkillData {
     boostTime: number;
 }
 
-interface CurrencyMessage {
+export interface CurrencyMessage {
     currencyId: string,
     quantity: number,
 }

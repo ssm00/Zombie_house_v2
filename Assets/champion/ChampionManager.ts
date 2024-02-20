@@ -6,7 +6,7 @@ import {
     AudioSource,
     CapsuleCollider,
     GameObject,
-    Object, Time,
+    Object, Sprite, Time,
     Vector3, WaitForEndOfFrame,
     WaitForSeconds
 } from "UnityEngine";
@@ -23,6 +23,10 @@ export default class ChampionManager extends ZepetoScriptBehaviour {
     public attackCoolTimeImg: Image;
     public skillCoolTimeImg: Image;
     public attackSound: AudioClip;
+
+    public moveSpeedupImg: Sprite;
+    public attackSpeedupImg: Sprite;
+    public lungeImg: Sprite;
 
     private attackCoolTime: number;
     private skillCoolTime: number;
@@ -90,14 +94,20 @@ export default class ChampionManager extends ZepetoScriptBehaviour {
         }else if (name == "cha_movespeedup") {
             this.moveSpeedSetting();
             this.skillButton.gameObject.SetActive(true);
+            this.skillButton.image.sprite = this.moveSpeedupImg;
+            this.skillCoolTimeImg.sprite = this.moveSpeedupImg;
             this.skillButton.onClick.AddListener(this.moveSpeedSkill.bind(this));
         } else if (name == "cha_lunge") {
             this.lungeSetting();
             this.skillButton.gameObject.SetActive(true);
+            this.skillButton.image.sprite = this.lungeImg;
+            this.skillCoolTimeImg.sprite = this.lungeImg;
             this.skillButton.onClick.AddListener(this.lungeSkill.bind(this));
         } else if (name == "cha_attackspeedup") {
             this.attackSpeedUpSetting();
             this.skillButton.gameObject.SetActive(true);
+            this.skillButton.image.sprite = this.attackSpeedupImg;
+            this.skillCoolTimeImg.sprite = this.attackSpeedupImg;
             this.skillButton.onClick.AddListener(this.attackSpeedUpSkill.bind(this));
         }
     }

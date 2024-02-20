@@ -16,6 +16,12 @@
       },
       "url": "https://upm.zepeto.run"
     },
+    "com.unity.2d.sprite": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {}
+    },
     "com.unity.collab-proxy": {
       "version": "1.3.9",
       "depth": 0,
@@ -225,6 +231,17 @@
       "dependencies": {},
       "url": "https://upm.zepeto.run"
     },
+    "zepeto.product": {
+      "version": "1.2.8",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "zepeto.world.gui": "1.2.2",
+        "zepeto.script": "1.8.0",
+        "zepeto.event.bus": "0.5.3"
+      },
+      "url": "https://upm.zepeto.run"
+    },
     "zepeto.script": {
       "version": "1.14.3",
       "depth": 1,
@@ -302,7 +319,7 @@
     },
     "zepeto.world.gui": {
       "version": "1.2.2",
-      "depth": 2,
+      "depth": 1,
       "source": "registry",
       "dependencies": {},
       "url": "https://upm.zepeto.run"

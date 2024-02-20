@@ -7,13 +7,14 @@ import {ProductRecord, ProductService, PurchaseType} from "ZEPETO.Product";
 import {ZepetoWorldMultiplay} from "ZEPETO.World";
 import {Room, RoomData} from "ZEPETO.Multiplay";
 import ITM_Inventory from './ITM_Inventory';
-import {BalanceSync, InventorySync, Currency} from "./UIBalances";
+import {BalanceSync, InventorySync, Currency, InventoryAction} from "./UIBalances";
 
 export default class UIInventory extends ZepetoScriptBehaviour {
     @SerializeField() private usedSlotNumTxt : Text;
     @SerializeField() private possessionStarTxt : Text;
     @SerializeField() private useBtn : Button;
-    
+    @SerializeField() private informationPref : GameObject;
+
     @SerializeField() private contentParent : Transform;
     @SerializeField() private prefItem : GameObject;
     @SerializeField() private itemImage : Sprite[];
@@ -39,6 +40,7 @@ export default class UIInventory extends ZepetoScriptBehaviour {
             this.StartCoroutine(this.RefreshBalanceUI());
         });
         this._room.AddMessageHandler<InventorySync>("SyncInventories", (message) => {
+            this.OpenInformation(`Item has been ${InventoryAction[message.inventoryAction]} in the inventory.`);
             this.StartCoroutine(this.RefreshInventoryUI());
         });
         this._room.AddMessageHandler<BalanceSync>("SyncBalances", (message) => {
@@ -173,6 +175,11 @@ export default class UIInventory extends ZepetoScriptBehaviour {
         data.Add("productId", item.productId);
         data.Add("quantity", 1);
         this._multiplay.Room?.Send("onUseInventory", data.GetObject());
+    }
+
+    private OpenInformation(message:string){
+        const inforObj = GameObject.Instantiate(this.informationPref,this.transform.parent) as GameObject;
+        inforObj.GetComponentInChildren<Text>().text = message;
     }
 
 }
