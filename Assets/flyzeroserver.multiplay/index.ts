@@ -5,7 +5,7 @@ import {Box, Player, Transform, Vector3} from "ZEPETO.Multiplay.Schema";
 //server
 export default class extends Sandbox {
 
-    private playerNumber = 5;
+    private playerNumber = 2;
     private mainTimerId: number = 0;
 
     //서버에서 사용할 함수 생성 onMessage에 등록하면 해당 messageType으로 호출 해서 사용가능 클라이언트가 사용하는 함수들
@@ -59,12 +59,14 @@ export default class extends Sandbox {
                 // "Zombie" 역할인 플레이어 수 세기
                 const zombieCount = Array.from(this.state.players.values()).filter(player => player.role === "Zombie").length;
                 this.broadcast("userColorUpdate",zombieCount);
+                // 감염시킨 인간 수 업데이트
+                client.send("infectOther", 1);
                 //끝 확인
                 if (zombieCount == this.state.players.size) {
-                    this.broadcast("zombieWin", "zombieWin");
+                    this.broadcast("gameOver", "Zombie Win!!");
                     clearInterval(this.mainTimerId);
                     this.lockCancel();
-                    this.kickAll();
+                    //this.kickAll();
                 }
             }
         });
@@ -80,12 +82,22 @@ export default class extends Sandbox {
                 this.broadcast("otherOpenBox",boxId);
                 this.broadcast("boxColorUpdate",openedBoxesCount);
                 if (openedBoxesCount == 3) {
-                    this.broadcast("humanWin", "humanWin");
+                    this.broadcast("gameOver", "Human Win!!");
                     clearInterval(this.mainTimerId);
                     this.lockCancel();
-                    this.kickAll();
+                    //this.kickAll();
                 }
             }
+        });
+
+        //랭크 점수 가져오기
+        this.onMessage("getRankScore", (client: SandboxPlayer, message: number) => {
+            this.getRankScore(client, message);
+        });
+
+        //랭크 점수 업데이트
+        this.onMessage("rankScoreUpdate", (client: SandboxPlayer, message: number) => {
+            this.RankScoreUpdate(client, message);
         });
 
         //다시하기
@@ -102,7 +114,6 @@ export default class extends Sandbox {
 
     async onJoin(client: SandboxPlayer) {
         console.log(`[OnJoin] sessionId : ${client.sessionId}, userId : ${client.userId}`)
-
         const player = new Player();
         player.sessionId = client.sessionId;
         player.role = "Human"
@@ -146,7 +157,7 @@ export default class extends Sandbox {
         this.mainTimerId = setInterval(() => {
             if (time <= 0) {
                 clearInterval(this.mainTimerId); // 타이머 중지
-                this.broadcast("zombieWin", "zombieWin");
+                this.broadcast("gameOver", "Zombie Win!!");
                 this.kickAll();
             } else {
                 this.broadcast("mainTimer", time)
@@ -176,10 +187,12 @@ export default class extends Sandbox {
         const zombieIndex = Math.floor(Math.random() * this.playerNumber);
         const playerList = Array.from(this.state.players.keys());
         //debug모드 랜덤 0번으로 고정 바꾸기
-        const zombiePlayerSessionId = playerList[zombieIndex];
+        //const zombiePlayerSessionId = playerList[zombieIndex];
+        const zombiePlayerSessionId = playerList[0];
         const zombiePlayer = this.state.players.get(zombiePlayerSessionId);
         if (zombiePlayer) {
             zombiePlayer.role = "Zombie";
+            zombiePlayer.send("setStartZombie", true);
             this.broadcast("userColorUpdate",1);
         }
     }
@@ -253,5 +266,19 @@ export default class extends Sandbox {
                 time--;
             }
         }, 1000); // 1초 간격으로 실행
+    }
+    
+    async RankScoreUpdate(client: SandboxPlayer, score: number){
+        const storage: DataStorage = client.loadDataStorage();
+        await storage.set("RankScore", Number(score));
+    }
+    
+    async getRankScore(client: SandboxPlayer, score: number){
+        const storage: DataStorage = client.loadDataStorage();
+        let playerRankScore = await storage.get("RankScore") as number;
+        if (playerRankScore == null) playerRankScore = 0;
+        await storage.set("RankScore", playerRankScore);
+        client.send("rankScore", playerRankScore);
+        console.log(`rank: ${playerRankScore}`, typeof playerRankScore);
     }
 }
