@@ -149,7 +149,7 @@ export default class UIInventory extends ZepetoScriptBehaviour {
         const request = CurrencyService.GetUserCurrencyBalancesAsync();
         yield new WaitUntil(()=>request.keepWaiting == false);
         if(request.responseData.isSuccess) {
-            this.possessionStarTxt.text = request.responseData.currencies.ContainsKey(Currency.star) ? request.responseData.currencies.get_Item(Currency.star).toString() : "0";
+            this.possessionStarTxt.text = request.responseData.currencies.ContainsKey(Currency.coin) ? request.responseData.currencies.get_Item(Currency.coin).toString() : "0";
         }
         else{
             console.log(request.responseData.ErrorCode);
@@ -169,7 +169,6 @@ export default class UIInventory extends ZepetoScriptBehaviour {
             console.warn("server disconnect");
             return;
         }
-
         const data = new RoomData();
         data.Add("productId", item.productId);
         data.Add("quantity", 1);

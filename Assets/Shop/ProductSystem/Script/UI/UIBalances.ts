@@ -8,16 +8,14 @@ import {ZepetoWorldMultiplay} from "ZEPETO.World";
 import {RoomData, Room} from "ZEPETO.Multiplay";
 
 export default class UIBalances extends ZepetoScriptBehaviour {
-    @SerializeField() private possessionStarTxt : Text;
-    @SerializeField() private possessionEnergyTxt : Text;
+    @SerializeField() private possessionCoinTxt : Text;
     @SerializeField() private possessionZemTxt : Text;
     @SerializeField() private possessionExpTxt : Text;
     @SerializeField() private possessionAmountExpTxt : Text;
     @SerializeField() private possessionLevelTxt : Text;
-    @SerializeField() private expSlider : Slider;
 
     private _multiplay : ZepetoWorldMultiplay;
-    private _room : Room
+    private room : Room
     private _myExp :number = 0;
     private _amountExp :number = 30;
     private _myLevel:number = 1;    
@@ -28,15 +26,16 @@ export default class UIBalances extends ZepetoScriptBehaviour {
         this._multiplay = Object.FindObjectOfType<ZepetoWorldMultiplay>();
 
         this._multiplay.RoomJoined += (room: Room) => {
-            this._room = room;
+            this.room = room;
             this.InitMessageHandler();
         }
     }
     
     private InitMessageHandler() {
-        this._room.AddMessageHandler<BalanceSync>("SyncBalances", (message) => {
+        this.room.AddMessageHandler<BalanceSync>("SyncBalances", (message) => {
             this.RefreshAllBalanceUI();
         });
+
         ProductService.OnPurchaseCompleted.AddListener((product, response) => {
             this.RefreshAllBalanceUI();
         });
@@ -51,8 +50,7 @@ export default class UIBalances extends ZepetoScriptBehaviour {
         const request = CurrencyService.GetUserCurrencyBalancesAsync();
         yield new WaitUntil(()=>request.keepWaiting == false);
         if(request.responseData.isSuccess) {
-            this.possessionStarTxt.text = request.responseData.currencies?.ContainsKey(Currency.star) ? request.responseData.currencies?.get_Item(Currency.star).toString() :"0";
-            this.possessionEnergyTxt.text = request.responseData.currencies?.ContainsKey(Currency.energy) ? request.responseData.currencies?.get_Item(Currency.energy).toString() :"0";
+            this.possessionCoinTxt.text = request.responseData.currencies?.ContainsKey(Currency.coin) ? request.responseData.currencies?.get_Item(Currency.coin).toString() :"0";
         }
     }
     
@@ -67,7 +65,6 @@ export default class UIBalances extends ZepetoScriptBehaviour {
         if(this._myExp >= this._amountExp){
             this._myLevel++;
             this._myExp -= this._amountExp;
-            this.LevelUpReward();
         }
         this.RefreshExpUI();
     }
@@ -75,19 +72,9 @@ export default class UIBalances extends ZepetoScriptBehaviour {
     private RefreshExpUI(){
         this.possessionExpTxt.text = this._myExp.toString();
         this.possessionLevelTxt.text = this._myLevel.toString();
-        this.expSlider.value = this._myExp / this._amountExp;
     }
-    
-    private LevelUpReward(){
-        // Get 5 stars for every level you raise
-        const data = new RoomData();
-        data.Add("currencyId", Currency.star);
-        data.Add("quantity", 5);
-        this._multiplay.Room?.Send("onCredit", data.GetObject());
-    }
-    
-}
 
+}
 
 
 export interface BalanceSync {
@@ -107,6 +94,5 @@ export enum InventoryAction{
 }
 
 export enum Currency{
-    star = "star",
-    energy = "energy",
+    coin = "coin",
 }

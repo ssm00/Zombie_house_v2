@@ -1,6 +1,8 @@
 import {Sandbox, SandboxOptions, SandboxPlayer} from "ZEPETO.Multiplay";
 import {DataStorage} from "ZEPETO.Multiplay.DataStorage";
 import {Box, ClosetData, Player, Transform, Vector3} from "ZEPETO.Multiplay.Schema";
+import {loadCurrency} from "ZEPETO.Multiplay.Currency";
+import {loadInventory} from "ZEPETO.Multiplay.Inventory";
 
 //server
 export default class extends Sandbox {
@@ -48,7 +50,7 @@ export default class extends Sandbox {
 
         //공격 모션 시작
         this.onMessage("attackMotion", (client: SandboxPlayer, message: string) => {
-            this.broadcast("attackMotionInvoke", client.sessionId)
+            this.broadcast("attackMotionInvoke", client.sessionId, {except: client})
         });
 
         //공격 성공 로직
@@ -104,7 +106,7 @@ export default class extends Sandbox {
          * msg는 RoomData에 closetId, isUsing
          */
         this.onMessage("moveIntoCloset", (client: SandboxPlayer, message) => {
-            this.broadcastCloset("enter",client, message);
+            this.broadcastCloset("enter", client, message);
         });
 
         /**
@@ -112,7 +114,7 @@ export default class extends Sandbox {
          * msg는 RoomData에 closetId, isUsing
          */
         this.onMessage("exitFromCloset", (client: SandboxPlayer, message) => {
-            this.broadcastCloset("exit",client, message);
+            this.broadcastCloset("exit", client, message);
         });
 
         /**
@@ -125,15 +127,66 @@ export default class extends Sandbox {
             this.broadcast("zombiePullOverFetch", closetData);
         });
 
-        // 캐릭터 스킬 사용
         /**
-         * 런지 
+         * 캐릭터 스킬 사용
+         * 이동과 관련된 부분은 동기화 필요함
+         * 공격속도는 플레이어 버튼 쿨타임 변경이라 동기화 안해도됨 (이동아님)
+         * 돌진
          */
         this.onMessage("lungeUsing", (client: SandboxPlayer, message) => {
             this.broadcast("lungeUsing", client.sessionId, {except: client});
         });
-        
 
+        /**
+         * 이동속도 부스트
+         */
+        this.onMessage("moveSpeedUsing", (client: SandboxPlayer, boostTime: number) => {
+            const moveSpeedData: MoveSpeedSkillData = {
+                sessionId: client.sessionId,
+                boostTime: boostTime
+            };
+            this.broadcast("moveSpeedUsing", moveSpeedData, {except: client});
+        });
+
+
+        //상점 관련 코드
+        /**
+         * 돈을 쓰는 경우
+         * Currency ID는 coin, zem 두가지 존재
+         */
+        this.onMessage("onDebit", (client, message: CurrencyMessage) => {
+            const currencyId = message.currencyId;
+            const quantity = message.quantity;
+            this.onDebit(client, currencyId, quantity);
+        });
+
+        /**
+         * 돈을 얻는 경우
+         */
+        this.onMessage("onCredit", (client, message:CurrencyMessage) => {
+            const currencyId = message.currencyId;
+            const quantity = message.quantity;
+            this.addCredit(client, currencyId, quantity);
+        });
+
+        /**
+         * 인벤토리에서 아이템을 사용하는 경우
+         * 아이템이 있는지 없는지 확인 및 링인지 캐릭터인지 확인
+         */
+        this.onMessage("onUseInventory", (client, message:InventoryMessage) => {
+
+            const productId = message.productId;
+            const quantity = message.quantity ?? 1;
+
+            this.UseInventory(client, productId, quantity);
+        });
+
+        this.onMessage("onRemoveInventory", (client, message:InventoryMessage) => {
+
+            const productId = message.productId;
+
+            this.RemoveInventory(client, productId);
+        });
     }
 
     async onJoin(client: SandboxPlayer) {
@@ -145,12 +198,13 @@ export default class extends Sandbox {
         player.isCrouch = false;
         /**
          * 좀비 챔피언선택용 기본은 노멀
-         * Normal
-         * MoveSpeedUp
-         * Lunge
-         * AttackSpeedUp
+         * cha_normal
+         * cha_movespeedup
+         * cha_lunge
+         * cha_attackspeedup
          */
-        player.championName = "Normal";
+        player.championName = "cha_normal";
+        player.ringOption = "ring_red";
 
         if (client.hashCode) {
             player.zepetoHash = client.hashCode;
@@ -201,6 +255,7 @@ export default class extends Sandbox {
 
     private async startGameSetting() {
         if (this.state.players.size == this.playerNumber) {
+            this.broadcast("gameStartCanvas", "gameStartCanvas");
             this.zombieSelect();
             this.boxPositionSetting(4);
             this.mainGameTimer(300);
@@ -317,4 +372,129 @@ export default class extends Sandbox {
             this.broadcast("otherExitCloset", closetData, {except: client});
         }
     }
+
+    //상점 코드 시작
+    async onDebit(client: SandboxPlayer, currencyId: string, quantity: number) {
+        try {
+            const currency = await loadCurrency(client.userId);
+            if(await currency.debit(currencyId, quantity) === true) {
+                const currencySync: CurrencyMessage = {
+                    currencyId: currencyId,
+                    quantity: -quantity
+                }
+                client.send("SyncBalances", currencySync);
+            }
+            else{
+                //It's usually the case that there's no balance.
+                client.send("DebitError", "Currency Not Enough");
+            }
+        }
+        catch (e)
+        {
+            console.log(`${e}`);
+        }
+    }
+
+    async addCredit(client: SandboxPlayer, currencyId: string, quantity: number) {
+
+        try {
+            const currency = await loadCurrency(client.userId);
+            await currency.credit(currencyId, quantity);
+            const currencySync: CurrencyMessage = {
+                currencyId : currencyId,
+                quantity : quantity
+            }
+            client.send("SyncBalances",currencySync);
+        }
+        catch (e)
+        {
+            console.log(`${e}`);
+        }
+    }
+
+    async UseInventory(client: SandboxPlayer, productId: string, quantity: number) {
+
+        try {
+            const inventory = await loadInventory(client.userId);
+            /**
+             * use로 사용시 영구 아이템 false로 나와서 일단 has로 검증
+             * 추후에 일회용 아이템 출시한다면 영구아이템 여부도 저장해야할듯
+             */
+            if (await inventory.has(productId) === true) {
+                const inventorySync: InventorySync = {
+                    productId: productId,
+                    inventoryAction: InventoryAction.Use
+                }
+                client.send("SyncInventories", inventorySync);
+                // 캐릭터 사용
+                if (productId.startsWith("cha")) {
+                    const player = this.state.players.get(client.sessionId);
+                    if(player){
+                        player.championName = productId;
+                    }
+                } else if(productId.startsWith("ring")) {
+                    const player = this.state.players.get(client.sessionId);
+                    if(player){
+                        player.ringOption = productId;
+                    }
+                }
+            }
+            else{
+                console.log("use error");
+            }
+        }
+        catch (e)
+        {
+            console.log(`${e}`);
+        }
+    }
+
+    async RemoveInventory(client: SandboxPlayer, productId: string) {
+
+        try {
+            const inventory = await loadInventory(client.userId);
+            if (await inventory.remove(productId) === true) {
+                const inventorySync: InventorySync = {
+                    productId: productId,
+                    inventoryAction: InventoryAction.Remove
+                }
+                client.send("SyncInventories", inventorySync);
+                console.log("success rm");
+            }
+            else{
+                console.log("remove error");
+            }
+        }
+        catch (e)
+        {
+            console.log(`${e}`);
+        }
+    }
+
 };
+
+interface InventorySync {
+    productId: string,
+    inventoryAction: InventoryAction,
+}
+
+interface InventoryMessage {
+    productId: string,
+    quantity?: number,
+}
+
+interface MoveSpeedSkillData {
+    sessionId: string,
+    boostTime: number;
+}
+
+interface CurrencyMessage {
+    currencyId: string,
+    quantity: number,
+}
+
+export enum InventoryAction{
+    Remove = -1,
+    Use,
+    Add,
+}

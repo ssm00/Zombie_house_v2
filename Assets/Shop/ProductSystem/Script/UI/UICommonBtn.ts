@@ -40,8 +40,8 @@ export default class UICommonBtn extends ZepetoScriptBehaviour {
     
     private InitMessageHandler() {
         //button listener
-        this.gainBalanceBtn.onClick.AddListener(() =>this.OnClickGainBalance(Currency.energy, 1));
-        this.useBalanceBtn.onClick.AddListener(() => this.OnClickUseBalance(Currency.energy, 1));
+        this.gainBalanceBtn.onClick.AddListener(() =>this.OnClickGainBalance(Currency.coin, 1));
+        this.useBalanceBtn.onClick.AddListener(() => this.OnClickUseBalance(Currency.coin, 1));
         this.increaseExpBtn.onClick.AddListener(() => this.OnClickIncreaseExp());
         this.acquireRandomItemBtn.onClick.AddListener(() => this.OnClickAcquireRandomItem());
         //sell items with id called potion1.
@@ -166,6 +166,7 @@ export default class UICommonBtn extends ZepetoScriptBehaviour {
         const request = ProductService.PurchaseProductAsync(productId);
         yield new WaitUntil(() => request.keepWaiting == false);
         if (request.responseData.isSuccess) {
+
             // is purchase success
         } else {
             // is purchase fail

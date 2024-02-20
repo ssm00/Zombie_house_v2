@@ -10,7 +10,7 @@ import {
 } from "ZEPETO.Character.Controller";
 import * as UnityEngine from "UnityEngine";
 import {
-    Animator, AudioClip, AudioListener, AudioSource,
+    Animator, AudioClip, AudioListener, AudioSource, Canvas,
     CapsuleCollider, CharacterController,
     GameObject,
     HumanBodyBones, Material,
@@ -29,8 +29,8 @@ import BoxColorManager from "./Ui/BoxColorManager";
 import WalkSoundManager from "./walkSound/WalkSoundManager";
 import WalkSoundPlay from './walkSound/WalkSoundPlay';
 import ClosetManager from "./Closet/ClosetManager";
-import ChampionManager from "./champion/ChampionManager";
-import {ZepetoInputControl} from "RootNamespace";
+import ChampionManager, {MoveSpeedSkillData} from "./champion/ChampionManager";
+import RingManager from "./ZombieRing/RingManager";
 
 /**
  * tag는3가지
@@ -48,6 +48,8 @@ export default class Client extends ZepetoScriptBehaviour {
     //public attackButton: Button;
     //public winUi: TextMeshProUGUI;
     public startTimer : TextMeshProUGUI;
+    public inGameCanvas: Canvas;
+    public lobbyCanvas: Canvas;
     //살릴지 확인 필요
     // public againButton: Button;
     // public exitButton: Button;
@@ -73,6 +75,7 @@ export default class Client extends ZepetoScriptBehaviour {
     private walkSoundManager: WalkSoundManager;
     private closetManager: ClosetManager;
     private championManager: ChampionManager;
+    private ringManager: RingManager;
 
     //game
     private room: Room;
@@ -97,14 +100,12 @@ export default class Client extends ZepetoScriptBehaviour {
         this.boxColorManager = BoxColorManager.getInstance();
         this.closetManager = ClosetManager.getInstance();
         this.championManager = ChampionManager.getInstance();
+        this.ringManager = RingManager.getInstance();
         // this.againButton.gameObject.SetActive(false);
         // this.exitButton.gameObject.SetActive(false);
         this.crouchButton.onClick.AddListener(() => {
             this.doCrouch();
         });
-        // this.attackButton.onClick.AddListener(() => {
-        //     this.doAttack();
-        // });
         this.testButton.onClick.AddListener(() => {
             this.testCode();
         });
@@ -133,7 +134,7 @@ export default class Client extends ZepetoScriptBehaviour {
             });
 
             room.AddMessageHandler("attackMotionInvoke", (sessionId: string) => {
-                this.othersAttackMotion(sessionId.toString());
+                this.championManager.othersAttackMotion(sessionId.toString());
             });
 
             room.AddMessageHandler("userColorUpdate", (zombieCount: number) => {
@@ -177,8 +178,19 @@ export default class Client extends ZepetoScriptBehaviour {
             });
 
             //돌진 스킬 사용 시
-            room.AddMessageHandler("zombiePullOverFetch", (sessionId: string) => {
-                this.championManager.otherLunge(sessionId.toString());
+            room.AddMessageHandler("lungeUsing", (sessionId: string) => {
+                this.championManager.otherLungeSkill(sessionId.toString());
+            });
+
+            //이동 속도 증가 스킬 사용 시
+            room.AddMessageHandler("moveSpeedUsing", (moveSpeedSkillData: MoveSpeedSkillData) => {
+                this.championManager.otherMoveSpeedSkill(moveSpeedSkillData.sessionId, moveSpeedSkillData.boostTime);
+            });
+
+            //게임시작시 캔버스 바꾸기
+            room.AddMessageHandler("gameStartCanvas", (message) => {
+                this.lobbyCanvas.gameObject.SetActive(false);
+                this.inGameCanvas.gameObject.SetActive(true);
             });
 
         };
@@ -303,13 +315,12 @@ export default class Client extends ZepetoScriptBehaviour {
                 animator.SetBool("isZombie", true);
                 animator.SetTrigger("BeCatched");
                 //좀비링
-                const zombieRing = Object.Instantiate(this.zombieRing) as GameObject;
-                zombieRing.transform.parent = zepetoPlayer.character.transform;
-                zombieRing.transform.localPosition = UnityEngine.Vector3.zero;
+                this.ringManager.makeRing(player.ringOption, zepetoPlayer);
                 //피부색
                 const bodyRenderer = zepetoPlayer.character.GetComponentInChildren<SkinnedMeshRenderer>();
                 bodyRenderer.material = this.zombieColor;
                 //속도값 최적화
+                zepetoPlayer.character.additionalRunSpeed = this.championManager.getAdditionalSpeed(player.championName);
             }
         } else if (zepetoPlayer.character.gameObject.tag == "Untagged") {
             zepetoPlayer.character.gameObject.tag = "Player";
@@ -338,18 +349,6 @@ export default class Client extends ZepetoScriptBehaviour {
         this.walkSoundManager.playWalkingSound(player)
     }
 
-    private othersAttackMotion(sessionId:string) {
-        const isLocal = this.room.SessionId === sessionId;
-        const player: Player = this.currentPlayers.get(sessionId);
-        if (!isLocal && player.role == "Zombie") {
-            const zepetoPlayer = ZepetoPlayers.instance.GetPlayer(sessionId);
-            const othersAnimator = zepetoPlayer.character.GetComponentInChildren<Animator>();
-            AudioSource.PlayClipAtPoint(this.attackSound, zepetoPlayer.character.transform.position);
-            othersAnimator.SetTrigger("Attack");
-            othersAnimator.CrossFade("Attack", 1, 1, 0.1);
-        }
-    }
-
     private testCode() {
         if (this.myPlayerAnimator.GetBool("isZombie") == false) {
             this.myPlayerAnimator.SetBool("isZombie", true);
@@ -369,10 +368,10 @@ export default class Client extends ZepetoScriptBehaviour {
             const bodyRenderer = this.myPlayer.character.GetComponentInChildren<SkinnedMeshRenderer>();
             bodyRenderer.material = this.zombieColor;
             //속도
-            this.speedValue = this.championManager.getAdditionalSpeed("Lunge");
+            this.speedValue = this.championManager.getAdditionalSpeed("cha_lunge");
             this.myPlayer.character.additionalRunSpeed += this.speedValue;
             //스킬 및 챔피언 속성
-            this.championManager.selectChampion("Lunge", this.myPlayer, this.zombieHand, this.myPlayerAnimator);
+            this.championManager.selectChampion("cha_lunge", this.myPlayer, this.zombieHand, this.myPlayerAnimator);
         }
     }
 
@@ -392,9 +391,7 @@ export default class Client extends ZepetoScriptBehaviour {
                 //나 잡혔을때 좀비 변경 모션추가
                 this.StartCoroutine(this.InfectCoRoutine());
                 //좀비링
-                const zombieRing = Object.Instantiate(this.zombieRing) as GameObject;
-                zombieRing.transform.parent = this.myPlayer.character.transform;
-                zombieRing.transform.localPosition = UnityEngine.Vector3.zero;
+                this.ringManager.makeRing(mySchema.ringOption, this.myPlayer);
                 //피부색
                 const bodyRenderer = this.myPlayer.character.GetComponentInChildren<SkinnedMeshRenderer>();
                 bodyRenderer.material = this.zombieColor;
@@ -447,30 +444,6 @@ export default class Client extends ZepetoScriptBehaviour {
             this.myPlayer.character.characterController.center = new UnityEngine.Vector3(0, 0.6, 0);
         }
     }
-
-    // champion으로 옮겨짐
-    // //나 공격 T:M(M)
-    // private doAttack() {
-    //     if(this.myPlayerAnimator.GetBool("isZombie") == true){
-    //         this.StartCoroutine(this.AttackCoRoutine());
-    //     }
-    // }
-    //
-    // //손 col 키기는 코루틴 모션 속도랑 맞춰서 켜야함
-    // *AttackCoRoutine() {
-    //     this.zombieHand.enabled = true;
-    //     this.attackMotion();
-    //     yield new WaitForSeconds(0.8);
-    //     this.zombieHand.enabled = false;
-    // }
-    //
-    // //모션은 동기로 실행
-    // private attackMotion() {
-    //     this.myPlayerAnimator.SetTrigger("Attack");
-    //     this.myPlayerAnimator.CrossFade("Attack", 1, 1, 0.1);
-    //     AudioSource.PlayClipAtPoint(this.attackSound, this.myPlayer.character.transform.position);
-    //     this.room.Send("attackMotion", "attack motion");
-    // }
 
 
     //공격은 나만 구현하면 됨 CatchManager 에서 호출
@@ -561,6 +534,7 @@ export default class Client extends ZepetoScriptBehaviour {
     // }
 
     private updatePlayerNumber(playerNum: number) {
+        console.log("PLAyernum",playerNum)
         this.startTimer.text = `${playerNum} / 5`
     }
 
@@ -581,5 +555,4 @@ export default class Client extends ZepetoScriptBehaviour {
     public sendRoomData(type: string, data: RoomData) {
         this.room.Send(type, data.GetObject());
     }
-
 }

@@ -14,6 +14,7 @@ import Client from "../Client";
 import {ZepetoPlayer, ZepetoPlayers} from "ZEPETO.Character.Controller";
 import {ZepetoWorldMultiplay} from "ZEPETO.World";
 import {Room} from "ZEPETO.Multiplay";
+import {Player} from "ZEPETO.Multiplay.Schema";
 
 export default class ChampionManager extends ZepetoScriptBehaviour {
 
@@ -64,36 +65,37 @@ export default class ChampionManager extends ZepetoScriptBehaviour {
 
     //추가 이동속도
     public getAdditionalSpeed(name: string) {
-        if (name == "Normal") {
+        if (name == "cha_normal") {
             return 0.2;
-        } else if (name == "MoveSpeedUp") {
+        } else if (name == "cha_movespeedup") {
             return 0;
-        } else if (name == "Lunge") {
+        } else if (name == "cha_lunge") {
             return 0.1;
-        } else if (name == "AttackSpeedUp") {
+        } else if (name == "cha_attackspeedup") {
             return 0.1;
         }
     }
 
     /**
-     * 1. normal 기본
-     * 2. movespeedup 스킬 사용시 이동속도 부스트
-     * 3. lunge 스킬 사용시 돌진
-     * 4. attackSpeedUp 스킬 사용시 공격속도 업
+     * 옵션은 상품 ID와 동일하게 설정해야함 이후 새로운 캐릭터 추가 시 참고
+     * 1. cha_normal 기본
+     * 2. cha_movespeedup 스킬 사용시 이동속도 부스트
+     * 3. cha_lunge 스킬 사용시 돌진
+     * 4. cha_attackspeedup 스킬 사용시 공격속도 업
      */
     private skillOn(name: string) {
-        if (name == "Normal") {
+        if (name == "cha_normal") {
             this.normalSetting()
             this.skillButton.gameObject.SetActive(false);
-        }else if (name == "MoveSpeedUp") {
+        }else if (name == "cha_movespeedup") {
             this.moveSpeedSetting();
             this.skillButton.gameObject.SetActive(true);
             this.skillButton.onClick.AddListener(this.moveSpeedSkill.bind(this));
-        } else if (name == "Lunge") {
+        } else if (name == "cha_lunge") {
             this.lungeSetting();
             this.skillButton.gameObject.SetActive(true);
             this.skillButton.onClick.AddListener(this.lungeSkill.bind(this));
-        } else if (name == "AttackSpeedUp") {
+        } else if (name == "cha_attackspeedup") {
             this.attackSpeedUpSetting();
             this.skillButton.gameObject.SetActive(true);
             this.skillButton.onClick.AddListener(this.attackSpeedUpSkill.bind(this));
@@ -116,53 +118,57 @@ export default class ChampionManager extends ZepetoScriptBehaviour {
     }
 
     private moveSpeedSetting() {
-        this.additionalSpeed = 0
+        this.additionalSpeed = 0.1
         this.attackCoolTime = 2
         this.skillCoolTime = 10
     }
 
     private attackSpeedUpSetting() {
-        this.additionalSpeed = 0
+        this.additionalSpeed = 0.1
         this.attackCoolTime = 2
         this.skillCoolTime = 10
     }
 
     private lungeSkill() {
         this.room.Send("lungeUsing", "lungeUsing");
-        this.StartCoroutine(this.LungeCoRoutine(this.myPlayer));
+        this.StartCoroutine(this.LungeCoRoutine());
         this.StartCoroutine(this.SkillCoolDown());
+    }
+
+    * LungeCoRoutine() {
+        this.myPlayer.character.additionalRunSpeed += 5
+        let forward: Vector3 = this.myPlayer.character.gameObject.transform.forward;
+        forward = this.vectorMul(forward, 3);
+        let position = this.myPlayer.character.gameObject.transform.position;
+        position = this.vectorPlus(position, forward);
+        this.myPlayer.character.MoveToPosition(position);
+        yield new WaitForSeconds(0.2);
+        this.myPlayer.character.additionalRunSpeed -= 5
         this.doAttack();
     }
 
-    // * LungeCoRoutine() {
-    //     this.myPlayer.character.additionalRunSpeed += 5
-    //     let forward: Vector3 = this.myPlayer.character.gameObject.transform.forward;
-    //     forward = this.vectorMul(forward, 3);
-    //     let position = this.myPlayer.character.gameObject.transform.position;
-    //     position = this.vectorPlus(position, forward);
-    //     this.myPlayer.character.MoveToPosition(position);
-    //     yield new WaitForSeconds(1);
-    //     this.myPlayer.character.additionalRunSpeed -= 5
-    // }
-
-    * LungeCoRoutine(zepetoPlayer:ZepetoPlayer) {
-        zepetoPlayer.character.additionalRunSpeed += 5
-        let forward: Vector3 = zepetoPlayer.character.gameObject.transform.forward;
-        forward = this.vectorMul(forward, 3);
-        let position = zepetoPlayer.character.gameObject.transform.position;
-        position = this.vectorPlus(position, forward);
-        zepetoPlayer.character.MoveToPosition(position);
-        yield new WaitForSeconds(1);
-        zepetoPlayer.character.additionalRunSpeed -= 5
+    public otherLungeSkill(sessionId:string) {
+        this.StartCoroutine(this.OtherLungeCoRoutine(sessionId));
     }
 
-    public otherLunge(sessionId:string) {
+    * OtherLungeCoRoutine(sessionId:string) {
         const otherPlayer = ZepetoPlayers.instance.GetPlayer(sessionId);
-        this.StartCoroutine(this.LungeCoRoutine());
+        otherPlayer.character.additionalRunSpeed += 5
+        let forward: Vector3 = otherPlayer.character.gameObject.transform.forward;
+        forward = this.vectorMul(forward, 3);
+        let position = otherPlayer.character.gameObject.transform.position;
+        position = this.vectorPlus(position, forward);
+        otherPlayer.character.MoveToPosition(position);
+        yield new WaitForSeconds(0.2);
+        otherPlayer.character.additionalRunSpeed -= 5
+        this.othersAttackMotion(sessionId);
     }
 
+    // 이동속도 스킬
     private moveSpeedSkill() {
-        this.StartCoroutine(this.MoveSpeedCoRoutine(3));
+        const boostTime = 2;
+        this.room.Send("moveSpeedUsing", boostTime);
+        this.StartCoroutine(this.MoveSpeedCoRoutine(boostTime));
         this.StartCoroutine(this.SkillCoolDown());
     }
 
@@ -172,8 +178,23 @@ export default class ChampionManager extends ZepetoScriptBehaviour {
         this.additionalSpeed -= 1;
     }
 
+    public otherMoveSpeedSkill(sessionId: string, boostTime: number) {
+        this.StartCoroutine(this.OtherMoveSpeedCoRoutine(sessionId, boostTime));
+    }
+
+    * OtherMoveSpeedCoRoutine(sessionId:string, boostTime: number) {
+        const otherPlayer = ZepetoPlayers.instance.GetPlayer(sessionId);
+        otherPlayer.character.additionalRunSpeed += 1;
+        yield new WaitForSeconds(boostTime);
+        otherPlayer.character.additionalRunSpeed -= 1;
+    }
+    ////
+    
+    //공격속도
     private attackSpeedUpSkill() {
-        this.StartCoroutine(this.AttackSpeedCoRoutine(3));
+        const boostTime = 3;
+        this.room.Send("moveSpeedUsing", boostTime);
+        this.StartCoroutine(this.AttackSpeedCoRoutine(boostTime));
         this.StartCoroutine(this.SkillCoolDown());
     }
 
@@ -230,12 +251,18 @@ export default class ChampionManager extends ZepetoScriptBehaviour {
         this.attackCoolTimeImg.fillAmount = 0;
     }
 
+    public othersAttackMotion(sessionId:string) {
+        const zepetoPlayer = ZepetoPlayers.instance.GetPlayer(sessionId);
+        const othersAnimator = zepetoPlayer.character.GetComponentInChildren<Animator>();
+        AudioSource.PlayClipAtPoint(this.attackSound, zepetoPlayer.character.transform.position);
+        othersAnimator.SetTrigger("Attack");
+        othersAnimator.CrossFade("Attack", 1, 1, 0.1);
+    }
+
 
     private doAttack() {
-        if(this.myPlayerAnimator.GetBool("isZombie") == true){
-            this.StartCoroutine(this.AttackCoRoutine());
-            this.StartCoroutine(this.AttackCoolDown());
-        }
+        this.StartCoroutine(this.AttackCoRoutine());
+        this.StartCoroutine(this.AttackCoolDown());
     }
 
     private vectorMul(vector3:Vector3, num:number) {
@@ -252,3 +279,8 @@ export default class ChampionManager extends ZepetoScriptBehaviour {
         return vector1
     }
 };
+
+export interface MoveSpeedSkillData {
+    sessionId: string,
+    boostTime: number;
+}
