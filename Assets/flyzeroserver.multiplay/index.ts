@@ -60,13 +60,15 @@ export default class extends Sandbox {
                 infectedPlayer.role = "Zombie";
                 // "Zombie" 역할인 플레이어 수 세기
                 const zombieCount = Array.from(this.state.players.values()).filter(player => player.role === "Zombie").length;
-                this.broadcast("userColorUpdate", zombieCount);
+                this.broadcast("userColorUpdate",zombieCount);
+                // 감염시킨 인간 수 업데이트
+                client.send("infectOther", 1);
                 //끝 확인
                 if (zombieCount == this.state.players.size) {
-                    this.broadcast("zombieWin", "zombieWin");
+                    this.broadcast("gameOver", "Zombie Win!!");
                     clearInterval(this.mainTimerId);
                     this.lockCancel();
-                    this.kickAll();
+                    //this.kickAll();
                 }
             }
         });
@@ -82,12 +84,22 @@ export default class extends Sandbox {
                 this.broadcast("otherOpenBox", boxId);
                 this.broadcast("boxColorUpdate", openedBoxesCount);
                 if (openedBoxesCount == 3) {
-                    this.broadcast("humanWin", "humanWin");
+                    this.broadcast("gameOver", "Human Win!!");
                     clearInterval(this.mainTimerId);
                     this.lockCancel();
-                    this.kickAll();
+                    //this.kickAll();
                 }
             }
+        });
+
+        //랭크 점수 가져오기
+        this.onMessage("getRankScore", (client: SandboxPlayer, message: number) => {
+            this.getRankScore(client, message);
+        });
+
+        //랭크 점수 업데이트
+        this.onMessage("rankScoreUpdate", (client: SandboxPlayer, message: number) => {
+            this.RankScoreUpdate(client, message);
         });
 
         //다시하기
@@ -191,7 +203,6 @@ export default class extends Sandbox {
 
     async onJoin(client: SandboxPlayer) {
         console.log(`[OnJoin] sessionId : ${client.sessionId}, userId : ${client.userId}`)
-
         const player = new Player();
         player.sessionId = client.sessionId;
         player.role = "Human";
@@ -244,7 +255,7 @@ export default class extends Sandbox {
         this.mainTimerId = setInterval(() => {
             if (time <= 0) {
                 clearInterval(this.mainTimerId); // 타이머 중지
-                this.broadcast("zombieWin", "zombieWin");
+                this.broadcast("gameOver", "Zombie Win!!");
                 this.kickAll();
             } else {
                 this.broadcast("mainTimer", time)
@@ -280,7 +291,8 @@ export default class extends Sandbox {
         const zombiePlayer = this.state.players.get(zombiePlayerSessionId);
         if (zombiePlayer) {
             zombiePlayer.role = "Zombie";
-            this.broadcast("userColorUpdate", 1);
+            zombiePlayer.send("setStartZombie", true);
+            this.broadcast("userColorUpdate",1);
         }
     }
 
@@ -471,6 +483,20 @@ export default class extends Sandbox {
         }
     }
 
+    async RankScoreUpdate(client: SandboxPlayer, score: number){
+        const storage: DataStorage = client.loadDataStorage();
+        await storage.set("RankScore", Number(score));
+    }
+    
+    async getRankScore(client: SandboxPlayer, score: number){
+        const storage: DataStorage = client.loadDataStorage();
+        let playerRankScore = await storage.get("RankScore") as number;
+        if (playerRankScore == null) playerRankScore = 0;
+        await storage.set("RankScore", playerRankScore);
+        client.send("rankScore", playerRankScore);
+        console.log(`rank: ${playerRankScore}`, typeof playerRankScore);
+    }
+
 };
 
 interface InventorySync {
@@ -497,4 +523,5 @@ export enum InventoryAction{
     Remove = -1,
     Use,
     Add,
+
 }
