@@ -24,10 +24,17 @@ declare module "ZEPETO.Multiplay.Schema" {
 		state: number;
 		role: string;
 		isCrouch: boolean;
+		championName: string;
+		ringOption: string;
 	}
 	class Box extends Schema {
 		id: number;
 		transform: Transform;
 		open: boolean;
+	}
+	class ClosetData extends Schema {
+		id: number;
+		isUsing: boolean;
+		sessionId: string;
 	}
 }

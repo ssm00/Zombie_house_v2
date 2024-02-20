@@ -1,6 +1,8 @@
 import {Sandbox, SandboxOptions, SandboxPlayer} from "ZEPETO.Multiplay";
 import {DataStorage} from "ZEPETO.Multiplay.DataStorage";
-import {Box, Player, Transform, Vector3} from "ZEPETO.Multiplay.Schema";
+import {Box, ClosetData, Player, Transform, Vector3} from "ZEPETO.Multiplay.Schema";
+import {loadCurrency} from "ZEPETO.Multiplay.Currency";
+import {loadInventory} from "ZEPETO.Multiplay.Inventory";
 
 //server
 export default class extends Sandbox {
@@ -48,7 +50,7 @@ export default class extends Sandbox {
 
         //공격 모션 시작
         this.onMessage("attackMotion", (client: SandboxPlayer, message: string) => {
-            this.broadcast("attackMotionInvoke", client.sessionId)
+            this.broadcast("attackMotionInvoke", client.sessionId, {except: client})
         });
 
         //공격 성공 로직
@@ -79,8 +81,8 @@ export default class extends Sandbox {
                 // "열린박스" 갯수 세기
                 // 열린 박스의 갯수 세기
                 const openedBoxesCount = this.state.boxes.filter(box => box.open).length;
-                this.broadcast("otherOpenBox",boxId);
-                this.broadcast("boxColorUpdate",openedBoxesCount);
+                this.broadcast("otherOpenBox", boxId);
+                this.broadcast("boxColorUpdate", openedBoxesCount);
                 if (openedBoxesCount == 3) {
                     this.broadcast("gameOver", "Human Win!!");
                     clearInterval(this.mainTimerId);
@@ -101,6 +103,7 @@ export default class extends Sandbox {
         });
 
         //다시하기
+        //삭제 고려 아무것도 없음 기능
         this.onMessage("again", (client: SandboxPlayer, message: string) => {
             this.broadcast("attackMotionInvoke", client.sessionId)
         });
@@ -110,14 +113,109 @@ export default class extends Sandbox {
             this.tryKick(client.sessionId);
         });
 
+        /**
+         * 옷장 들어가기
+         * msg는 RoomData에 closetId, isUsing
+         */
+        this.onMessage("moveIntoCloset", (client: SandboxPlayer, message) => {
+            this.broadcastCloset("enter", client, message);
+        });
+
+        /**
+         * 옷장 나오기
+         * msg는 RoomData에 closetId, isUsing
+         */
+        this.onMessage("exitFromCloset", (client: SandboxPlayer, message) => {
+            this.broadcastCloset("exit", client, message);
+        });
+
+        /**
+         * 좀비가 끄집어내기
+         */
+        this.onMessage("zombiePullOver", (client: SandboxPlayer, message) => {
+            const closetData = new ClosetData();
+            closetData.id = message.closetId;
+            closetData.sessionId = message.sessionId;
+            this.broadcast("zombiePullOverFetch", closetData);
+        });
+
+        /**
+         * 캐릭터 스킬 사용
+         * 이동과 관련된 부분은 동기화 필요함
+         * 공격속도는 플레이어 버튼 쿨타임 변경이라 동기화 안해도됨 (이동아님)
+         * 돌진
+         */
+        this.onMessage("lungeUsing", (client: SandboxPlayer, message) => {
+            this.broadcast("lungeUsing", client.sessionId, {except: client});
+        });
+
+        /**
+         * 이동속도 부스트
+         */
+        this.onMessage("moveSpeedUsing", (client: SandboxPlayer, boostTime: number) => {
+            const moveSpeedData: MoveSpeedSkillData = {
+                sessionId: client.sessionId,
+                boostTime: boostTime
+            };
+            this.broadcast("moveSpeedUsing", moveSpeedData, {except: client});
+        });
+
+
+        //상점 관련 코드
+        /**
+         * 돈을 쓰는 경우
+         * Currency ID는 coin, zem 두가지 존재
+         */
+        this.onMessage("onDebit", (client, message: CurrencyMessage) => {
+            const currencyId = message.currencyId;
+            const quantity = message.quantity;
+            this.onDebit(client, currencyId, quantity);
+        });
+
+        /**
+         * 돈을 얻는 경우
+         */
+        this.onMessage("onCredit", (client, message:CurrencyMessage) => {
+            const currencyId = message.currencyId;
+            const quantity = message.quantity;
+            this.addCredit(client, currencyId, quantity);
+        });
+
+        /**
+         * 인벤토리에서 아이템을 사용하는 경우
+         * 아이템이 있는지 없는지 확인 및 링인지 캐릭터인지 확인
+         */
+        this.onMessage("onUseInventory", (client, message:InventoryMessage) => {
+
+            const productId = message.productId;
+            const quantity = message.quantity ?? 1;
+
+            this.UseInventory(client, productId, quantity);
+        });
+
+        this.onMessage("onRemoveInventory", (client, message:InventoryMessage) => {
+
+            const productId = message.productId;
+
+            this.RemoveInventory(client, productId);
+        });
     }
 
     async onJoin(client: SandboxPlayer) {
         console.log(`[OnJoin] sessionId : ${client.sessionId}, userId : ${client.userId}`)
         const player = new Player();
         player.sessionId = client.sessionId;
-        player.role = "Human"
-        player.isCrouch = false
+        player.role = "Human";
+        player.isCrouch = false;
+        /**
+         * 좀비 챔피언선택용 기본은 노멀
+         * cha_normal
+         * cha_movespeedup
+         * cha_lunge
+         * cha_attackspeedup
+         */
+        player.championName = "cha_normal";
+        player.ringOption = "ring_red";
 
         if (client.hashCode) {
             player.zepetoHash = client.hashCode;
@@ -139,7 +237,7 @@ export default class extends Sandbox {
         this.startGameStartTimer(5)
     }
 
-    private startGameStartTimer(time:number) {
+    private startGameStartTimer(time: number) {
         if (this.state.players.size == this.playerNumber) {
             const intervalId = setInterval(() => {
                 if (time <= 0) {
@@ -168,8 +266,9 @@ export default class extends Sandbox {
 
     private async startGameSetting() {
         if (this.state.players.size == this.playerNumber) {
+            this.broadcast("gameStartCanvas", "gameStartCanvas");
             this.zombieSelect();
-            this.boxPositionSetting(3);
+            this.boxPositionSetting(4);
             this.mainGameTimer(300);
             await this.lock();
         }
@@ -178,13 +277,13 @@ export default class extends Sandbox {
     private async lockCancel() {
         try {
             await this.unlock();
-        } catch(e) {
+        } catch (e) {
             console.error(e);
         }
     }
 
     private zombieSelect() {
-        const zombieIndex = Math.floor(Math.random() * this.playerNumber);
+        //const zombieIndex = Math.floor(Math.random() * this.playerNumber);
         const playerList = Array.from(this.state.players.keys());
         //debug모드 랜덤 0번으로 고정 바꾸기
         //const zombiePlayerSessionId = playerList[zombieIndex];
@@ -197,7 +296,7 @@ export default class extends Sandbox {
         }
     }
 
-    private boxPositionSetting(boxNumber:number) {
+    private boxPositionSetting(boxNumber: number) {
         const transform1 = this.makeTransform(-16.58, 0, -34.55, 0, 0, 0);
         const transform2 = this.makeTransform(-4.6, 0, -27.66, 0, 180, 0);
         const transform3 = this.makeTransform(-2.372, 0, -5.327, 0, 120, 0);
@@ -228,7 +327,7 @@ export default class extends Sandbox {
         return array;
     }
 
-    private makeTransform(px:number,py:number,pz:number,rx:number,ry:number,rz:number) {
+    private makeTransform(px: number, py: number, pz: number, rx: number, ry: number, rz: number) {
         const transform = new Transform();
         transform.position = new Vector3();
         transform.position.x = px;
@@ -267,7 +366,123 @@ export default class extends Sandbox {
             }
         }, 1000); // 1초 간격으로 실행
     }
-    
+
+    /**
+     * closetData를 받을때 closetId, isUsing 정보는 포함되어있음
+     * 누군가 옷장에 들어간 경우 해당 옷장ID, 사용중 여부가 넘어옴
+     * 옷장에서 나온 경우 사용중만 false로 바뀌고 나머지 동일하므로 코드 그냥 재사용
+     * sessionId값만 추가 해서 누가 들어갔는지 전파해 주면됨
+     */
+    private broadcastCloset(enterOrExit: string, client: SandboxPlayer, message: any) {
+        const closetData = new ClosetData();
+        closetData.id = message.closetId;
+        closetData.isUsing = message.isUsing;
+        closetData.sessionId = client.sessionId;
+        if (enterOrExit==="enter") {
+            this.broadcast("otherMoveIntoCloset", closetData, {except: client});
+        }else if (enterOrExit === "exit") {
+            this.broadcast("otherExitCloset", closetData, {except: client});
+        }
+    }
+
+    //상점 코드 시작
+    async onDebit(client: SandboxPlayer, currencyId: string, quantity: number) {
+        try {
+            const currency = await loadCurrency(client.userId);
+            if(await currency.debit(currencyId, quantity) === true) {
+                const currencySync: CurrencyMessage = {
+                    currencyId: currencyId,
+                    quantity: -quantity
+                }
+                client.send("SyncBalances", currencySync);
+            }
+            else{
+                //It's usually the case that there's no balance.
+                client.send("DebitError", "Currency Not Enough");
+            }
+        }
+        catch (e)
+        {
+            console.log(`${e}`);
+        }
+    }
+
+    async addCredit(client: SandboxPlayer, currencyId: string, quantity: number) {
+
+        try {
+            const currency = await loadCurrency(client.userId);
+            await currency.credit(currencyId, quantity);
+            const currencySync: CurrencyMessage = {
+                currencyId : currencyId,
+                quantity : quantity
+            }
+            client.send("SyncBalances",currencySync);
+        }
+        catch (e)
+        {
+            console.log(`${e}`);
+        }
+    }
+
+    async UseInventory(client: SandboxPlayer, productId: string, quantity: number) {
+
+        try {
+            const inventory = await loadInventory(client.userId);
+            /**
+             * use로 사용시 영구 아이템 false로 나와서 일단 has로 검증
+             * 추후에 일회용 아이템 출시한다면 영구아이템 여부도 저장해야할듯
+             */
+            if (await inventory.has(productId) === true) {
+                const inventorySync: InventorySync = {
+                    productId: productId,
+                    inventoryAction: InventoryAction.Use
+                }
+                client.send("SyncInventories", inventorySync);
+                // 캐릭터 사용
+                if (productId.startsWith("cha")) {
+                    const player = this.state.players.get(client.sessionId);
+                    if(player){
+                        player.championName = productId;
+                    }
+                } else if(productId.startsWith("ring")) {
+                    const player = this.state.players.get(client.sessionId);
+                    if(player){
+                        player.ringOption = productId;
+                    }
+                }
+            }
+            else{
+                console.log("use error");
+            }
+        }
+        catch (e)
+        {
+            console.log(`${e}`);
+        }
+    }
+
+    async RemoveInventory(client: SandboxPlayer, productId: string) {
+
+        try {
+            const inventory = await loadInventory(client.userId);
+            if (await inventory.remove(productId) === true) {
+                const inventorySync: InventorySync = {
+                    productId: productId,
+                    inventoryAction: InventoryAction.Remove
+                }
+                client.send("SyncInventories", inventorySync);
+                console.log("success rm");
+            }
+            else{
+                console.log("remove error");
+            }
+        }
+        catch (e)
+        {
+            console.log(`${e}`);
+        }
+    }
+
     async RankScoreUpdate(client: SandboxPlayer, score: number){
         const storage: DataStorage = client.loadDataStorage();
         await storage.set("RankScore", Number(score));
@@ -281,4 +496,32 @@ export default class extends Sandbox {
         client.send("rankScore", playerRankScore);
         console.log(`rank: ${playerRankScore}`, typeof playerRankScore);
     }
+
+};
+
+interface InventorySync {
+    productId: string,
+    inventoryAction: InventoryAction,
+}
+
+interface InventoryMessage {
+    productId: string,
+    quantity?: number,
+}
+
+interface MoveSpeedSkillData {
+    sessionId: string,
+    boostTime: number;
+}
+
+interface CurrencyMessage {
+    currencyId: string,
+    quantity: number,
+}
+
+export enum InventoryAction{
+    Remove = -1,
+    Use,
+    Add,
+
 }
