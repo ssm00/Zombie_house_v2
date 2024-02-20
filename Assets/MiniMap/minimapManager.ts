@@ -48,7 +48,7 @@ export default class MinimapManager extends ZepetoScriptBehaviour {
 
     public deleteOther(player: Player){
         const targetObject : GameObject = this.otherPlayers.get(player);
-        
+        GameObject.Destroy(targetObject);
         this.otherPlayers.delete(player);
     }
 
@@ -62,15 +62,15 @@ export default class MinimapManager extends ZepetoScriptBehaviour {
             this.addOther(player);
         }
         const minimapOtherObject : GameObject = this.otherPlayers.get(player);
-        minimapOtherObject.transform.position = new UnityEngine.Vector3(player.transform.position.x, minimapOtherObject.transform.position.y, player.transform.position.z);
+        minimapOtherObject.transform.position = new UnityEngine.Vector3(player.transform.position.x, 10, player.transform.position.z);
         let settingColor : Color = Color.blue;
-        if(this.myPlayer.character.ZepetoAnimator.isHuman == true){
+        if(this.myPlayer.character.tag != "Zombie"){
             if(player.role == "Zombie"){
                 settingColor = Color.red;
             }
         }
         else {
-            if(player.role == "Human"){
+            if(player.role != "Zombie"){
                 settingColor = Color.clear;
             }
         }

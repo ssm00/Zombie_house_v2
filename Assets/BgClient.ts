@@ -17,11 +17,12 @@ import {
     Object,
     Quaternion, SkinnedMeshRenderer,
     Time,
-    WaitForSeconds
+    WaitForSeconds,
+    Color,
 } from "UnityEngine";
 import {TextMeshProUGUI} from "TMPro";
 import BoxManager from "./BoxManager";
-import {Button} from "UnityEngine.UI";
+import {Button, Image} from "UnityEngine.UI";
 import CatchId from "./CatchId";
 import UserColorManager from "./Ui/UserColorManager";
 import BoxColorManager from "./Ui/BoxColorManager";
@@ -36,9 +37,6 @@ export default class Client extends ZepetoScriptBehaviour {
     //ui
     public crouchButton: Button;
     public attackButton: Button;
-    public winUi: TextMeshProUGUI;
-    public againButton: Button;
-    public exitButton: Button;
 
     public catchZone: GameObject;
     public isCrouch:bool;
@@ -50,8 +48,32 @@ export default class Client extends ZepetoScriptBehaviour {
     private boxManager: BoxManager;
     private userColorManager: UserColorManager;
     private boxColorManager: BoxColorManager;
+    //result ui
+    public resultPanel: GameObject;
+    public winText: TextMeshProUGUI;
+    public resultPanelButton: Button;
+    public rankPanel: GameObject;
+    public gameWinText: TextMeshProUGUI;
+    public score: TextMeshProUGUI;
+    public plusScore: TextMeshProUGUI;
+    public deAliveImage: Image;
+    public deAliveScore: TextMeshProUGUI;
+    public deStartZombieImage: Image;
+    public deStartZombieScore: TextMeshProUGUI;
+    public deZombieImage: Image;
+    public deZombieScore: TextMeshProUGUI;
+    public deHumanCatchCountText: TextMeshProUGUI;
+    public deHumanCatchCountScore: TextMeshProUGUI;
+    public deBoxopenCountText: TextMeshProUGUI;
+    public deBoxopenCountScore: TextMeshProUGUI;
+    public lobbyButton: Button;
     //minimap
     private minimapManager: MinimapManager;
+    //rank
+    private rankScore: number=-1;
+    private startZombie: boolean=false;
+    private catchHumanCount: number=0;
+    private openBoxCount: number=0;
 
     private speedValue: number=0;
     private startTimer : TextMeshProUGUI;
@@ -70,8 +92,11 @@ export default class Client extends ZepetoScriptBehaviour {
         this.boxColorManager = BoxColorManager.getInstance();
         // minimap
         this.minimapManager = MinimapManager.getInstance();
-        this.againButton.gameObject.SetActive(false);
-        this.exitButton.gameObject.SetActive(false);
+        //rank
+        this.resultPanel.SetActive(false);
+        this.rankPanel.SetActive(false);
+        //lobby canvas 가져오기
+
         this.crouchButton.onClick.AddListener(() => {
             this.doCrouch();
         });
@@ -82,13 +107,12 @@ export default class Client extends ZepetoScriptBehaviour {
         this.multiPlay.RoomCreated += (room:Room) => {
             this.room = room
         }
-        this.againButton.onClick.AddListener(() => {
-
+        this.resultPanelButton.onClick.AddListener(() => {
+            this.resultContinue();
         });
-        this.exitButton.onClick.AddListener(() => {
-            this.doExit();
+        this.lobbyButton.onClick.AddListener(() => {
+            this.goLobby();
         });
-
         this.multiPlay.RoomJoined += (room: Room) => {
             //서버의 state가 변경되면 호출
             room.OnStateChange += this.OnStateChange;
@@ -126,16 +150,27 @@ export default class Client extends ZepetoScriptBehaviour {
                 this.updatePlayerNumber(playerNum);
             });
 
-            room.AddMessageHandler("zombieWin", (msg: string) => {
-                this.updateWinUi("Zombie Win!!");
+            room.AddMessageHandler("gameOver", (msg: string) => {
+                this.updateWinUi(msg);
             });
-
-            room.AddMessageHandler("humanWin", (msg: string) => {
-                this.updateWinUi("Human Win!!");
+            //rank 점수 받아오기
+            room.AddMessageHandler("rankScore", (rankScore: number) => {
+                console.log("rankScore", rankScore)
+                this.updatePlayerRankScore(rankScore);
+            });
+            //숙주좀비 설정
+            room.AddMessageHandler("setStartZombie", (message: boolean) => {
+                console.log("setStartZombie", message)
+                this.setStartZombie(message);
+            });
+            //내가 인간을 감염 시켰을 때
+            room.AddMessageHandler("infectOther", (message: number) =>{
+                this.addCatchHumanCount(message);
             });
         };
 
         this.StartCoroutine(this.SendMessageLoop(0.05))
+        this.Invoke("updateWinUiTest", 5);
     }
 
     private * SendMessageLoop(tick: number) {
@@ -189,6 +224,8 @@ export default class Client extends ZepetoScriptBehaviour {
                     player.OnChange += (ChangeValues) => this.OnUpdatePlayer(sessionId, player)
                 }
             });
+            //rank 점수 요청하기
+            this.room.Send("getRankScore", 0);
         }
 
         // 내시점 변경 나 상태 변경(룸에서 스키마를 변경했을때) T:M(M)
@@ -318,6 +355,7 @@ export default class Client extends ZepetoScriptBehaviour {
 
     //내가 박스를 연 경우
     public openBox(boxId:number) {
+        this.openBoxCount += 1;
         this.room.Send("boxOpen",boxId)
     }
     
@@ -445,15 +483,198 @@ export default class Client extends ZepetoScriptBehaviour {
     }
 
     private updateWinUi(msg:string) {
-        this.winUi.text = msg
-        // this.againButton.gameObject.SetActive(true);
-        this.exitButton.gameObject.SetActive(true);
+        this.winText.text = msg;
+        this.gameWinText.text = `-${msg}-`;
+        //게임 결과 화면 띄우기
+        this.resultPanel.SetActive(true);
+        //랭크 점수 추가
+        //기본점수
+        //좀비win - 숙주좀비+100, 일반좀비-20
+        //인간win - 인간+100, 숙주좀비-50, 일반좀비-20
+        //활동점수
+        //좀비- 인간 감염 한명당 +20
+        //인간- 상자 열기 하나당 +20
+        this.score.text = `${this.rankScore}`
+        var plusScore = 0
+        //기본점수 계산
+        if(msg == "Zombie Win!!"){
+            if(this.startZombie == true) {
+                plusScore += 100
+                this.deAliveImage.color = Color.gray;
+                this.deStartZombieImage.color = Color.white;
+                this.deZombieImage.color = Color.gray;
+                this.deStartZombieScore.text = "+100";
+            }
+            else {
+                plusScore += -20
+                this.deAliveImage.color = Color.gray;
+                this.deStartZombieImage.color = Color.gray;
+                this.deZombieImage.color = Color.white;
+                this.deStartZombieScore.text = "-20";
+            }
+        }
+        else if(msg == "Human Win!!"){
+            if(this.myPlayer.character.tag != "Zombie") {
+                plusScore += 100
+                this.deAliveImage.color = Color.white;
+                this.deStartZombieImage.color = Color.gray;
+                this.deZombieImage.color = Color.gray;
+                this.deStartZombieScore.text = "+100";
+            }
+            else if(this.startZombie == true) {
+                plusScore += -50
+                this.deAliveImage.color = Color.gray;
+                this.deStartZombieImage.color = Color.white;
+                this.deZombieImage.color = Color.gray;
+                this.deStartZombieScore.text = "-50";
+            }
+            else {
+                plusScore += -20
+                this.deAliveImage.color = Color.gray;
+                this.deStartZombieImage.color = Color.gray;
+                this.deZombieImage.color = Color.white;
+                this.deStartZombieScore.text = "-20";
+            }
+        }
+        //활동점수 계산
+        let activScore = this.catchHumanCount*20 + this.openBoxCount*20;
+        this.deHumanCatchCountText.text = `x${this.catchHumanCount}`;
+        this.deHumanCatchCountScore.text = `+${this.catchHumanCount*20}`;
+        this.deBoxopenCountText.text = `x${this.openBoxCount}`;
+        this.deBoxopenCountScore.text = `+${this.openBoxCount*20}`;
+        //총 점수 계산 및 랭크 점수 추가
+        plusScore += activScore;
+        this.rankScore += plusScore;
+        //총 점수 표시
+        if(plusScore >= 0) this.plusScore.text = `+${plusScore}`;
+        else this.plusScore.text = `${plusScore}`;
+        //rank 점수 서버에 저장
+        this.room.Send("rankScoreUpdate", this.rankScore)
+        //게임 개인 설정 초기화
+        this.startZombie = false;
+        this.catchHumanCount = 0;
+        this.openBoxCount = 0;
+    }
+    private updateWinUiTest() {
+        console.log("test")
+        let msg = "Human Win!!";
+        this.catchHumanCount = 2;
+        this.openBoxCount = 1;
+        this.winText.text = msg;
+        this.gameWinText.text = `-${msg}-`;
+        //게임 결과 화면 띄우기
+        this.resultPanel.SetActive(true);
+        //랭크 점수 추가
+        //기본점수
+        //좀비win - 숙주좀비+100, 일반좀비-20
+        //인간win - 인간+100, 숙주좀비-50, 일반좀비-20
+        //활동점수
+        //좀비- 인간 감염 한명당 +20
+        //인간- 상자 열기 하나당 +20
+        this.score.text = `${this.rankScore}`
+        var plusScore = 0
+        //기본점수 계산
+        if(msg == "Zombie Win!!"){
+            if(this.startZombie == true) {
+                plusScore += 100
+                this.deAliveImage.color = new Color(56/255, 56/255, 56/255);
+                this.deStartZombieImage.color = Color.white;
+                this.deZombieImage.color = new Color(56/255, 56/255, 56/255);
+                this.deAliveScore.text = "+0";
+                this.deStartZombieScore.text = "+100";
+                this.deZombieScore.text = "+0";
+            }
+            else {
+                plusScore += -20
+                this.deAliveImage.color = new Color(56/255, 56/255, 56/255);
+                this.deStartZombieImage.color = new Color(56/255, 56/255, 56/255);
+                this.deZombieImage.color = Color.white;
+                this.deAliveScore.text = "+0";
+                this.deStartZombieScore.text = "+0";
+                this.deZombieScore.text = "-20";
+            }
+        }
+        else if(msg == "Human Win!!"){
+            if(this.myPlayer.character.tag != "Zombie") {
+                plusScore += 100
+                this.deAliveImage.color = Color.white;
+                this.deStartZombieImage.color = new Color(56/255, 56/255, 56/255);
+                this.deZombieImage.color = new Color(56/255, 56/255, 56/255);
+                this.deAliveScore.text = "+100";
+                this.deStartZombieScore.text = "+0";
+                this.deZombieScore.text = "+0";
+            }
+            else if(this.startZombie == true) {
+                plusScore += -50
+                this.deAliveImage.color = new Color(56/255, 56/255, 56/255);
+                this.deStartZombieImage.color = Color.white;
+                this.deZombieImage.color = new Color(56/255, 56/255, 56/255);
+                this.deAliveScore.text = "+0";
+                this.deStartZombieScore.text = "-50";
+                this.deZombieScore.text = "+0";
+            }
+            else {
+                plusScore += -20
+                this.deAliveImage.color = new Color(56/255, 56/255, 56/255);
+                this.deStartZombieImage.color = new Color(56/255, 56/255, 56/255);
+                this.deZombieImage.color = Color.white;
+                this.deAliveScore.text = "+0";
+                this.deStartZombieScore.text = "+0";
+                this.deZombieScore.text = "-20";
+            }
+        }
+        //활동점수 계산
+        let activScore = this.catchHumanCount*20 + this.openBoxCount*20;
+        this.deHumanCatchCountText.text = `x${this.catchHumanCount}`;
+        this.deHumanCatchCountScore.text = `+${this.catchHumanCount*20}`;
+        this.deBoxopenCountText.text = `x${this.openBoxCount}`;
+        this.deBoxopenCountScore.text = `+${this.openBoxCount*20}`;
+        //총 점수 계산 및 랭크 점수 추가
+        plusScore += activScore;
+        this.rankScore += plusScore;
+        //총 점수 표시
+        if(plusScore >= 0) this.plusScore.text = `+${plusScore}`;
+        else this.plusScore.text = `${plusScore}`;
+        //rank 점수 서버에 저장
+        console.log("서버에 저장 rank",typeof this.rankScore)
+        this.room.Send("rankScoreUpdate", this.rankScore)
+        //게임 개인 설정 초기화
+        this.startZombie = false;
+        this.catchHumanCount = 0;
+        this.openBoxCount = 0;
     }
 
     private updatePlayerNumber(playerNum: number) {
         console.log(playerNum)
         this.startTimer.text = `${playerNum} / 5`
         console.log(`${this.startTimer.text}`)
+    }
+
+    //rank 점수 받아온 거 lobby canvas에 텍스트로 띄우기
+    private updatePlayerRankScore(score: number){
+        // rank 점수 설정
+        this.rankScore = Number(score);
+        // 연결한 오브젝트에 랭크 점수 띄우기
+    }
+
+    //숙주좀비 설정
+    private setStartZombie(message: boolean){
+        this.startZombie = message;
+    }
+
+    //감염시킨 인간 수 업데이트
+    private addCatchHumanCount(message: number){
+        this.catchHumanCount += message;
+    }
+
+    //게임 결과 화면에서 '계속' 버튼 눌렀을 때 랭크 점수 화면으로 전환하기
+    private resultContinue(){
+        this.resultPanel.SetActive(false);
+        this.rankPanel.SetActive(true);
+    }
+
+    private goLobby(){
+
     }
 
     Update() {
@@ -468,8 +689,9 @@ export default class Client extends ZepetoScriptBehaviour {
         //minimap
         this.minimapManager.updateMe(this.myPlayer);
     }
-
+    
     private doExit() {
         this.room.Send("exit", "exit");
     }
+
 }
