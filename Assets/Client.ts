@@ -313,11 +313,11 @@ export default class Client extends ZepetoScriptBehaviour {
                 this.myPlayerAnimator = myPlayer.character.GetComponentInChildren<Animator>();
                 this.myPlayer.character.gameObject.tag = "Me"
                 this.myCamera = ZepetoPlayers.instance.LocalPlayer.zepetoCamera;
-                this.zepetoScreenPad = ZepetoPlayers.instance.gameObject.GetComponentInChildren<ZepetoScreenTouchpad>();
-                this.zepetoScreenPad.OnDragEvent.AddListener(deltaVector => {
-                    ZepetoPlayers.instance.ZepetoCamera.transform.RotateAround(this.myPlayer.character.transform.position,
-                        UnityEngine.Vector3.up, deltaVector.x * Time.deltaTime * 160);
-                });
+                // this.zepetoScreenPad = ZepetoPlayers.instance.gameObject.GetComponentInChildren<ZepetoScreenTouchpad>();
+                // this.zepetoScreenPad.OnDragEvent.AddListener(deltaVector => {
+                //     ZepetoPlayers.instance.ZepetoCamera.transform.RotateAround(this.myPlayer.character.transform.position,
+                //         UnityEngine.Vector3.up, deltaVector.x * Time.deltaTime * 80);
+                // });
                 //동적생성된 캐릭터에 리스너추가
                 myPlayer.character.OnChangedState.AddListener((cur) => {
                     this.SendState(cur);
@@ -689,9 +689,9 @@ export default class Client extends ZepetoScriptBehaviour {
         this.deHumanCatchCountScore.text = `+${this.catchHumanCount*20}`;
         this.deBoxopenCountText.text = `x${this.openBoxCount}`;
         this.deBoxopenCountScore.text = `+${this.openBoxCount*20}`;
-        earnMoney += this.catchHumanCount*11 + this.openBoxCount*11;
-        this.deHumanCatchCountCoinText.text = `${this.catchHumanCount*11}`;
-        this.deBoxopenCountCoinText.text = `${this.openBoxCount*11}`;
+        earnMoney += this.catchHumanCount*12 + this.openBoxCount*12;
+        this.deHumanCatchCountCoinText.text = `${this.catchHumanCount*12}`;
+        this.deBoxopenCountCoinText.text = `${this.openBoxCount*12}`;
         //총 점수 계산 및 랭크 점수 추가
         plusScore += activScore;
         this.rankScore += plusScore;
@@ -714,9 +714,9 @@ export default class Client extends ZepetoScriptBehaviour {
 
     //나 포함 모든 플레이어 게임 시작 위치로 텔레포트
     private everyoneTeleport(){
-        const startPosition = new UnityEngine.Vector3(0,0,0);
+        const startPosition = new UnityEngine.Vector3(-9,0,11);
         for (const [key, player] of this.currentPlayers) {
-            ZepetoPlayers.instance.GetPlayer(player.sessionId).character.Teleport(startPosition, Quaternion.identity);
+            ZepetoPlayers.instance.GetPlayer(player.sessionId.toString()).character.Teleport(startPosition, Quaternion.identity);
         }
     }
 
@@ -744,7 +744,7 @@ export default class Client extends ZepetoScriptBehaviour {
 
     //감염시킨 인간 수 업데이트
     private addCatchHumanCount(message: number){
-        this.catchHumanCount += message;
+        this.catchHumanCount += Number(message);
     }
 
     //게임 결과 화면에서 '계속' 버튼 눌렀을 때 랭크 점수 화면으로 전환하기
@@ -764,10 +764,10 @@ export default class Client extends ZepetoScriptBehaviour {
         if ((null == this.myPlayer) || (null == this.myCamera)) {
             return;
         }
-        const lookAxisRot = Quaternion.LookRotation(this.myCamera.cameraParent.forward);
-        const projRot = UnityEngine.Vector3.ProjectOnPlane(lookAxisRot.eulerAngles, UnityEngine.Vector3.right);
-        // Match the rotation of the character with the forward direction of the camera.
-        this.myPlayer.character.gameObject.transform.rotation = Quaternion.Euler(projRot);
+        // const lookAxisRot = Quaternion.LookRotation(this.myCamera.cameraParent.forward);
+        // const projRot = UnityEngine.Vector3.ProjectOnPlane(lookAxisRot.eulerAngles, UnityEngine.Vector3.right);
+        // // Match the rotation of the character with the forward direction of the camera.
+        // this.myPlayer.character.gameObject.transform.rotation = Quaternion.Euler(projRot);
 
         //minimap
         this.minimapManager.updateMe(this.myPlayer);

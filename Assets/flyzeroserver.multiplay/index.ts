@@ -7,7 +7,7 @@ import {loadInventory} from "ZEPETO.Multiplay.Inventory";
 //server
 export default class extends Sandbox {
 
-    private playerNumber = 1;
+    private playerNumber = 5;
     private mainTimerId: number = 0;
 
     //서버에서 사용할 함수 생성 onMessage에 등록하면 해당 messageType으로 호출 해서 사용가능 클라이언트가 사용하는 함수들
@@ -238,7 +238,7 @@ export default class extends Sandbox {
         const size = this.state.players.size;
         this.broadcast("playerNumber", size);
         //게임시작 카운트 다운, 카운트 끝나면 좀비플레이어 설정
-        this.startGameStartTimer(5)
+        this.startGameStartTimer(10)
     }
 
     private startGameStartTimer(time: number) {
@@ -270,11 +270,11 @@ export default class extends Sandbox {
     private async startGameSetting() {
         if (this.state.players.size == this.playerNumber) {
             this.broadcast("startTeleport","startTeleport");
-            await this.pause(3);
+            await this.pause(10);
             this.broadcast("gameStartCanvas", "gameStartCanvas");
             this.zombieSelect();
-            this.boxPositionSetting(4);
-            this.mainGameTimer(10);
+            this.boxPositionSetting(5);
+            this.mainGameTimer(300);
             await this.lock();
         }
     }
@@ -302,11 +302,10 @@ export default class extends Sandbox {
     }
 
     private zombieSelect() {
-        //const zombieIndex = Math.floor(Math.random() * this.playerNumber);
+        const zombieIndex = Math.floor(Math.random() * this.playerNumber);
         const playerList = Array.from(this.state.players.keys());
         //debug모드 랜덤 0번으로 고정 바꾸기
-        //const zombiePlayerSessionId = playerList[zombieIndex];
-        const zombiePlayerSessionId = playerList[0];
+        const zombiePlayerSessionId = playerList[zombieIndex];
         const zombiePlayer = this.state.players.get(zombiePlayerSessionId);
         if (zombiePlayer) {
             zombiePlayer.role = "Zombie";
@@ -369,6 +368,8 @@ export default class extends Sandbox {
 
     async onLeave(client: SandboxPlayer, consented?: boolean) {
         this.state.players.delete(client.sessionId);
+        const size = this.state.players.size;
+        this.broadcast("playerNumber", size);
     }
 
     async tryKick(sessionId: string) {
