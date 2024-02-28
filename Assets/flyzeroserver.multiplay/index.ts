@@ -9,6 +9,7 @@ export default class extends Sandbox {
 
     private playerNumber = 5;
     private mainTimerId: number = 0;
+    public gameOver: boolean = false;
 
     //서버에서 사용할 함수 생성 onMessage에 등록하면 해당 messageType으로 호출 해서 사용가능 클라이언트가 사용하는 함수들
     onCreate(options: SandboxOptions) {
@@ -67,7 +68,6 @@ export default class extends Sandbox {
                 if (zombieCount == this.state.players.size) {
                     this.broadcast("gameOver", "Zombie Win!!");
                     clearInterval(this.mainTimerId);
-                    this.lockCancel();
                     //this.kickAll();
                 }
             }
@@ -86,7 +86,6 @@ export default class extends Sandbox {
                 if (openedBoxesCount == 3) {
                     this.broadcast("gameOver", "Human Win!!");
                     clearInterval(this.mainTimerId);
-                    this.lockCancel();
                 }
             }
         });
@@ -201,6 +200,7 @@ export default class extends Sandbox {
 
         //로비 이동
         this.onMessage("goLobby", (client, message) => {
+            this.gameOver = true;
             this.broadcast("lobbyTelePort", client.sessionId)
         });
     }
@@ -238,13 +238,13 @@ export default class extends Sandbox {
         const size = this.state.players.size;
         this.broadcast("playerNumber", size);
         //게임시작 카운트 다운, 카운트 끝나면 좀비플레이어 설정
-        this.startGameStartTimer(10)
+        this.startGameStartTimer(5)
     }
 
     private startGameStartTimer(time: number) {
-        if (this.state.players.size == this.playerNumber) {
+        if (this.state.players.size == this.playerNumber && this.gameOver == false) {
             const intervalId = setInterval(() => {
-                if (time <= 0) {
+                if (time <= 0 && this.state.players.size == this.playerNumber) {
                     clearInterval(intervalId); // 타이머 중지
                     this.startGameSetting()
                 } else {
@@ -270,10 +270,11 @@ export default class extends Sandbox {
     private async startGameSetting() {
         if (this.state.players.size == this.playerNumber) {
             this.broadcast("startTeleport","startTeleport");
-            await this.pause(10);
             this.broadcast("gameStartCanvas", "gameStartCanvas");
+            await this.pause(10);
             this.zombieSelect();
-            this.boxPositionSetting(5);
+            this.broadcast("userColorUpdate",1);
+            this.boxPositionSetting(4);
             this.mainGameTimer(300);
             await this.lock();
         }
@@ -284,22 +285,23 @@ export default class extends Sandbox {
         return new Promise<void>((resolve) => {
             const pauseTimerId = setInterval(() => {
                 if (remainingTime <= 0) {
-                    clearInterval(pauseTimerId); // Timer stopped
+                    clearInterval(pauseTimerId);
                     resolve();
                 } else {
+                    this.broadcast("zombieSelectTimer", remainingTime);
                     remainingTime--;
                 }
             }, 1000); // 1-second interval
         });
     }
 
-    private async lockCancel() {
-        try {
-            await this.unlock();
-        } catch (e) {
-            console.error(e);
-        }
-    }
+    // private async lockCancel() {
+    //     try {
+    //         await this.unlock();
+    //     } catch (e) {
+    //         console.error(e);
+    //     }
+    // }
 
     private zombieSelect() {
         const zombieIndex = Math.floor(Math.random() * this.playerNumber);
@@ -310,7 +312,6 @@ export default class extends Sandbox {
         if (zombiePlayer) {
             zombiePlayer.role = "Zombie";
             this.broadcast("setStartZombie", zombiePlayer.sessionId);
-            this.broadcast("userColorUpdate",1);
         }
     }
 

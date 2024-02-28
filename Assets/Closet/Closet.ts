@@ -11,7 +11,6 @@ export default class Closet extends ZepetoScriptBehaviour {
     @Header("[Icon]")
     @SerializeField() private prefIconCanvas: GameObject;
     @SerializeField() private iconPosition: Transform;
-    @SerializeField() private humanCatchButton: Button;
     @SerializeField() private closetCamera: GameObject;
 
     // Unity Event
@@ -31,7 +30,7 @@ export default class Closet extends ZepetoScriptBehaviour {
     public closetHidePosition: Vector3;
     public otherUsing: string;
     public imUsing: boolean;
-    private closetId: number;
+    public closetId: number;
     private myPlayer: GameObject;
     private myPlayerController: CharacterController;
     private myCamera: ZepetoCamera;
@@ -42,9 +41,9 @@ export default class Closet extends ZepetoScriptBehaviour {
         this.closetHidePosition.x=this.transform.position.x;
         this.closetHidePosition.y=this.transform.position.y;
         this.closetHidePosition.z=this.transform.position.z+0.1;
-        this.closetOutPosition.x=this.transform.position.x;
-        this.closetOutPosition.y=this.transform.position.y;
-        this.closetOutPosition.z=this.transform.position.z-0.8;
+        this.closetOutPosition.x=this.transform.transform.position.x;
+        this.closetOutPosition.y=this.transform.transform.position.y;
+        this.closetOutPosition.z=this.transform.transform.position.z-0.8;
         this.closetManager = ClosetManager.getInstance();
         this.imUsing = false;
         this.otherUsing = null;
@@ -52,25 +51,23 @@ export default class Closet extends ZepetoScriptBehaviour {
          * AddListener연결시 화살표함수를 사용하지 않으면 this가 콜백함수를 참조함
          * 일반 메소드로 사용하고 싶으면 bind를 사용해서 this를 넘겨줘야함
          */
-        this.humanCatchButton.onClick.AddListener(this.getOut.bind(this));
         ZepetoPlayers.instance.OnAddedLocalPlayer.AddListener(() => {
             this.myCamera = ZepetoPlayers.instance.LocalPlayer.zepetoCamera
         });
     }
-    private Update() {
-        if (this._isDoneFirstTrig && this._canvas?.gameObject.activeSelf) {
-            this.UpdateIconRotation();
-        }
-    }
+    // private Update() {
+    //     if (this._isDoneFirstTrig && this._canvas?.gameObject.activeSelf) {
+    //         this.UpdateIconRotation();
+    //     }
+    // }
     
     private OnTriggerEnter(coll: Collider) {
         if (coll != ZepetoPlayers.instance.LocalPlayer?.zepetoPlayer?.character.GetComponent<Collider>() || coll.gameObject.tag == "Player") {
             return;
         }
-        if (!this.myPlayer) {
-            this.myPlayer = coll.gameObject;
-            this.myPlayerController = coll.gameObject.GetComponent<CharacterController>();
-        }
+        this.myPlayer = coll.gameObject;
+        this.myPlayerController = coll.gameObject.GetComponent<CharacterController>();
+
         if ((this.myPlayer.tag == "Me" && !this.otherUsing) || this.myPlayer.tag == "Zombie") {
             this.ShowIcon();
             this.OnTriggerEnterEvent?.Invoke();
@@ -122,7 +119,13 @@ export default class Closet extends ZepetoScriptBehaviour {
 
     private OnClickIcon() {
         if (this.myPlayer.tag == "Me") {
-            this.humanClick();
+            console.log(this.imUsing)
+            if (!this.imUsing) {
+                this.humanClick();
+            } else {
+                console.log("getOUT")
+                this.getOut();
+            }
         }else if (this.myPlayer.tag == "Zombie") {
             this.zombieClick();
         }
@@ -131,7 +134,6 @@ export default class Closet extends ZepetoScriptBehaviour {
     private humanClick() {
         this.myPlayerController.enabled = false;
         this.myPlayer.transform.position = this.closetHidePosition;
-        this.humanCatchButton.gameObject.SetActive(true);
         this.myPlayerController.enabled = true;
         this.myCamera.gameObject.SetActive(false);
         this.closetCamera.gameObject.SetActive(true);
@@ -160,9 +162,10 @@ export default class Closet extends ZepetoScriptBehaviour {
      */
     public getOut() {
         this.myPlayerController.enabled = false;
-        this.myPlayer.transform.position = this.closetOutPosition;
+        const getOutPosition = new Vector3(this.closetHidePosition.x, this.closetHidePosition.y, this.closetHidePosition.z - 0.8);
+        console.log(getOutPosition.x, getOutPosition.y, getOutPosition.z)
+        this.myPlayer.transform.position = getOutPosition;
         this.myPlayerController.enabled = true;
-        this.humanCatchButton.gameObject.SetActive(false);
         this.myCamera.gameObject.SetActive(true);
         this.closetCamera.gameObject.SetActive(false);
         this.imUsing = false;

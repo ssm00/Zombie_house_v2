@@ -72,6 +72,8 @@ MonoBehaviour:
     - humanCatchButton
     - closetCamera
     - imUsing
+    - closetId
+    - getOutIcon
     unityValues:
     - {fileID: 5492554559315844802, guid: 3ae92f20b71fdaf449e6283e526097fb, type: 3}
     - {fileID: 2998679722793767582}
@@ -83,6 +85,8 @@ MonoBehaviour:
     - {fileID: 0}
     - {fileID: 0}
     - {fileID: 5580200211796675899}
+    - {fileID: 0}
+    - {fileID: 0}
     - {fileID: 0}
     values:
     - 
@@ -96,6 +100,8 @@ MonoBehaviour:
     - 
     - 
     - '{"type":"System.Boolean, mscorlib","value":"False"}'
+    - '{"type":"System.Single, mscorlib","value":"0"}'
+    - 
     unityArrayValues: []
     arrayValues: []
     script: {fileID: 4458252877524076426, guid: 804ebe908849be44ab76415fc26cdd36, type: 3}
@@ -421,11 +427,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6464189349213000260, guid: ce6d7795d7cf67348a9ba53f2669ef98, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.6
+      value: 1.279
       objectReference: {fileID: 0}
     - target: {fileID: 6464189349213000260, guid: ce6d7795d7cf67348a9ba53f2669ef98, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.4
+      value: -0.14
       objectReference: {fileID: 0}
     - target: {fileID: 6464189349213000260, guid: ce6d7795d7cf67348a9ba53f2669ef98, type: 3}
       propertyPath: m_LocalRotation.w

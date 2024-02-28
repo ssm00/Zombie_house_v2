@@ -56,11 +56,12 @@ export default class Client extends ZepetoScriptBehaviour {
     //public attackButton: Button;
     //public winUi: TextMeshProUGUI;
     public startTimer : TextMeshProUGUI;
+    public mainTimer: TextMeshProUGUI;
     public inGameCanvas: Canvas;
     public lobbyCanvas: Canvas;
     public userColorManager: UserColorManager;
     public boxColorManager: BoxColorManager;
-    public gameStateCanvas: Canvas;
+    //public gameStateCanvas: Canvas;
     //살릴지 확인 필요
     // public againButton: Button;
     // public exitButton: Button;
@@ -143,8 +144,7 @@ export default class Client extends ZepetoScriptBehaviour {
         this.closetManager = ClosetManager.getInstance();
         this.championManager = ChampionManager.getInstance();
         this.ringManager = RingManager.getInstance();
-        this.userColorManager = UserColorManager.getInstance();
-        this.boxColorManager = BoxColorManager.getInstance();
+
         // this.againButton.gameObject.SetActive(false);
         // this.exitButton.gameObject.SetActive(false);
         // minimap
@@ -152,7 +152,7 @@ export default class Client extends ZepetoScriptBehaviour {
         //rank
         this.resultPanel.SetActive(false);
         this.rankPanel.SetActive(false);
-        this.gameStateCanvas.gameObject.SetActive(false);
+        //this.gameStateCanvas.gameObject.SetActive(false);
         //lobby canvas 가져오기
         this.crouchButton.onClick.AddListener(() => {
             this.doCrouch();
@@ -194,7 +194,7 @@ export default class Client extends ZepetoScriptBehaviour {
             });
 
             room.AddMessageHandler("userColorUpdate", (zombieCount: number) => {
-                console.log(this.userColorManager, "USERCOLOR")
+                console.log(this.userColorManager, "zombieCount", zombieCount)
                 this.userColorManager.updateColor(zombieCount);
             });
 
@@ -207,7 +207,11 @@ export default class Client extends ZepetoScriptBehaviour {
             });
 
             room.AddMessageHandler("mainTimer", (time: number) => {
-                this.UpdateStartTimer(time);
+                this.UpdateMainTimer(time);
+            });
+
+            room.AddMessageHandler("zombieSelectTimer", (time: number) => {
+                this.selectZombieTimer(time);
             });
 
             room.AddMessageHandler("playerNumber", (playerNum: number) => {
@@ -236,7 +240,7 @@ export default class Client extends ZepetoScriptBehaviour {
 
             room.AddMessageHandler("gameOver", (msg: string) => {
                 this.lobbyCanvas.gameObject.SetActive(true);
-                this.gameStateCanvas.gameObject.SetActive(false);
+                this.updateTimerGameEnd();
                 this.updateWinUi(msg);
             });
             //rank 점수 받아오기
@@ -268,7 +272,8 @@ export default class Client extends ZepetoScriptBehaviour {
             room.AddMessageHandler("gameStartCanvas", (message) => {
                 this.lobbyCanvas.gameObject.SetActive(false);
                 this.inGameCanvas.gameObject.SetActive(true);
-                this.gameStateCanvas.gameObject.SetActive(true);
+                this.userColorManager = UserColorManager.getInstance();
+                this.boxColorManager = BoxColorManager.getInstance();
             });
 
             //게임 시작시 텔레포트
@@ -598,6 +603,21 @@ export default class Client extends ZepetoScriptBehaviour {
         this.startTimer.text = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
     }
 
+    private updateTimerGameEnd() {
+        this.startTimer.text = `GAME END`;
+    }
+
+    private UpdateMainTimer(time: number) {
+        const minutes = Math.floor(time / 60);
+        const seconds = time % 60;
+        this.mainTimer.text = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    }
+
+    private selectZombieTimer(time: number) {
+        this.mainTimer.text = `Zombie Selection Countdown : ${time}`;
+    }
+
+
     private updateWinUi(msg:string) {
         this.winText.text = msg.toString();
         this.gameWinText.text = `-${msg}-`;
@@ -695,6 +715,9 @@ export default class Client extends ZepetoScriptBehaviour {
         //총 점수 계산 및 랭크 점수 추가
         plusScore += activScore;
         this.rankScore += plusScore;
+        if(this.rankScore <0){
+            this.rankScore =0
+        }
         //총 점수 표시
         if(plusScore >= 0) this.plusScore.text = `+${plusScore}`;
         else this.plusScore.text = `${plusScore}`;
@@ -714,7 +737,7 @@ export default class Client extends ZepetoScriptBehaviour {
 
     //나 포함 모든 플레이어 게임 시작 위치로 텔레포트
     private everyoneTeleport(){
-        const startPosition = new UnityEngine.Vector3(-9,0,11);
+        const startPosition = new UnityEngine.Vector3(-9,0,-11);
         for (const [key, player] of this.currentPlayers) {
             ZepetoPlayers.instance.GetPlayer(player.sessionId.toString()).character.Teleport(startPosition, Quaternion.identity);
         }
@@ -757,7 +780,8 @@ export default class Client extends ZepetoScriptBehaviour {
         this.inGameCanvas.gameObject.SetActive(false);
         const position = new UnityEngine.Vector3(17, 0, 154);
         this.myPlayer.character.Teleport(position, Quaternion.identity);
-        this.room.Send("goLobby","goLobby")
+        this.room.Send("goLobby", "goLobby");
+        this.room.Send("getRankScore", 0);
     }
 
     Update() {
